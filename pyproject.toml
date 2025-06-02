@@ -1,0 +1,18 @@
+[tool.uv.sources]
+fetch-jira = { path = ".", editable = true }
+
+[project]
+name = "fetch-jira"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.32.3",
+    "google-api-python-client",
+    "google-auth",
+    "python-dotenv"
+]
+
+[tool.uv.scripts]
+jira-fetcher = "python jira-fetcher.py"
