@@ -14,5 +14,5 @@ dependencies = [
     "python-dotenv"
 ]
 
-[tool.uv.scripts]
-jira-fetcher = "python jira-fetcher.py"
+[project.scripts]
+jira-fetcher = "jira_fetcher:main"
