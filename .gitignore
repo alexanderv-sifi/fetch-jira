@@ -11,3 +11,7 @@ wheels/
 
 # Environment variables file
 .env
+# JIRA export files
+jira_export_*.json
+temp_jira_export_*.json
+jira_sample_*.json
