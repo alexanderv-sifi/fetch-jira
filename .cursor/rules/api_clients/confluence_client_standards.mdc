@@ -1,5 +1,34 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Specific standards for the Confluence API client module (confluence_client.py)."
+globs: ["**/confluence_client.py"]
+alwaysApply: true
+---
+
+# Confluence API Client Standards
+
+**Purpose:** This document outlines specific standards for the `confluence_client.py` module, supplementing the `common/general_api_client_standards.mdc`.
+
+**Supplements:** `.cursor/rules/common/general_api_client_standards.mdc`
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md`
+**Project-Specific Context:** `PROJECT_DEVELOPMENT_PLAN.MD`, Sections 1 (module breakdown for `confluence_client.py`) and 2.2 (Error Handling & Retry Mechanisms).
+
+## Module Specifics:
+1.  **Module Name:** `confluence_client.py`
+2.  **Core Functionality (as per `PROJECT_DEVELOPMENT_PLAN.MD`):
+    *   `fetch_page_content(page_id: str)`: Fetches the content of a Confluence page.
+    *   `fetch_child_pages(page_id: str)`: Fetches the child pages of a given Confluence page.
+3.  **Specific Error Handling:**
+    *   Raise `ConfluenceApiError` (custom exception) for general Confluence API request failures.
+    *   Raise `ConfluenceRateLimitError` (custom exception) for HTTP 429 responses.
+    *   Raise `ConfluenceAuthenticationError` (custom exception) for HTTP 401/403 errors.
+    *   Raise `ConfluencePageNotFoundError` (custom exception) for HTTP 404 errors when a page is not found.
+4.  **Specific Logging Details:**
+    *   When calling `fetch_page_content` or `fetch_child_pages`, log `page_id` at DEBUG/INFO level.
+    *   Log relevant Confluence-specific error details from responses upon failure.
+5.  **Confluence-Specific Configurations (from `config.py`):**
+    *   Ensure the client uses configurations such as `CONFLUENCE_BASE_URL`, `CONFLUENCE_API_USERNAME`, `CONFLUENCE_API_TOKEN` (or auth method), and `CONFLUENCE_SEMAPHORE_LIMIT` from `config.py`.

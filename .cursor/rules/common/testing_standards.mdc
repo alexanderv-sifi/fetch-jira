@@ -1,5 +1,173 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for writing tests using the pytest framework, including structure, naming, mocking, and coverage."
+globs: ["**/test_*.py", "**/*_test.py"]
+alwaysApply: true
+---
+
+# Pytest Testing Standards
+
+**AI Role Definition:** You are a QA engineer and Python developer with deep expertise in the pytest framework. Your role is to ensure all tests are written according to these standards, promoting code reliability and catching regressions effectively.
+
+**Project Goal Context:** These testing standards are fundamental to our project's goal of delivering high-quality, reliable software. Comprehensive testing reduces bugs, facilitates safer refactoring, and provides confidence in our codebase.
+
+# Testing Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Ruleset 5: `pytest` conventions, AAA, mocking, fixtures, parametrization, exception testing, mock external services, high coverage).
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.md`, Section 2.4: "Thorough Testing Strategy".
+
+1.  **Testing Framework:** **Must** use `pytest` as the testing framework.
+
+2.  **Test Types:**
+    *   **Unit Tests:**
+        *   Focus on testing individual modules and functions in isolation.
+        *   External dependencies (especially API clients, file system operations) **must** be mocked (e.g., using `unittest.mock` or `pytest-mock`).
+        *   Aim for high coverage of business logic within each module (`jira_client.py`, `data_processor.py`, `config.py`, etc.).
+    *   **Integration Tests:**
+        *   Test the interaction between key modules (e.g., `main.py` calling `data_processor.py`, which in turn uses mocked client modules).
+        *   Focus on verifying data flow and contract adherence between modules.
+        *   May involve using small, controlled test data fixtures.
+    *   **End-to-End Tests (Optional, as per `PROJECT_DEVELOPMENT_PLAN.md`):**
+        *   If implemented, these would test critical user flows against a real (but non-production, dedicated test) Jira instance if feasible. This is a lower priority than unit/integration tests for initial development.
+
+3.  **Test Organization:**
+    *   Tests should reside in a top-level `tests/` directory.
+    *   Mirror the application's module structure within `tests/` (e.g., `tests/unit/test_jira_client.py`, `tests/integration/test_data_processing.py`).
+    *   Test filenames **must** start with `test_` (e.g., `test_config.py`).
+    *   Test function names **must** start with `test_` (e.g., `def test_load_jira_url():`).
+
+4.  **`pytest` Conventions:**
+    *   **AAA Pattern (Arrange, Act, Assert):** Structure tests clearly using this pattern.
+    *   **Fixtures (`@pytest.fixture`):** Use fixtures to set up test preconditions and provide test data. Define fixtures in `conftest.py` files at appropriate levels (root `tests/` directory or per-module test directories).
+    *   **Parametrization (`@pytest.mark.parametrize`):** Use parametrization to test functions with multiple sets of inputs and expected outputs efficiently.
+    *   **Testing Exceptions:** Use `pytest.raises` to assert that functions raise expected exceptions under specific conditions.
+    *   **Markers (`@pytest.mark`):** Use markers to categorize tests (e.g., `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`).
+
+5.  **Mocking:**
+    *   External API calls (Jira, Confluence, GDrive) **must** be mocked in unit and most integration tests.
+    *   Utilize `mocker` fixture (from `pytest-mock`) or `unittest.mock.patch`.
+    *   Ensure mocks are specific and verify expected call patterns (e.g., `mock_get.assert_called_once_with(...)`).
+
+6.  **Test Data:**
+    *   For unit tests, use minimal, focused data, often defined directly within the test or via fixtures.
+    *   For integration tests, consider using small, representative JSON files or data structures as fixtures, stored within the `tests/` directory (e.g., `tests/fixtures/sample_issue.json`).
+    *   Avoid committing large test data files to the repository.
+
+7.  **Coverage:**
+    *   Aim for high unit test coverage for all core logic.
+    *   Use a coverage tool (e.g., `pytest-cov`) to measure and report coverage.
+    *   While 100% coverage is not always practical or valuable, strive to cover all critical paths and error conditions.
+
+8.  **CI Integration:** Tests **must** be runnable in a CI environment (e.g., GitHub Actions) and pass before code is merged.
+
+When writing or modifying tests in this project (primarily in files matching the globs above):
+
+1.  **Naming Conventions:** (Ref: Ruleset 5.1, 5.2 of `DEVELOPMENT_GUIDELINES.md`)
+    *   Test files *must* follow `test_*.py` or `*_test.py` naming.
+    *   Test functions *must* start with `test_` (e.g., `test_user_can_login`).
+    *   Test class names (if used, though functions are preferred for simplicity) should be `Test<Something>`.
+
+2.  **Test Structure (Arrange-Act-Assert - AAA):**
+    *   Structure your tests clearly using the AAA pattern:
+        *   **Arrange:** Set up preconditions, initialize objects, prepare mock data.
+        *   **Act:** Execute the function or method under test.
+        *   **Assert:** Verify the outcome against expectations. Include descriptive messages in assertions if the default output is not clear enough (e.g. `assert result == expected, "Custom error message"`).
+
+3.  **Assertions:** (Ref: Ruleset 5.3 of `DEVELOPMENT_GUIDELINES.md`)
+    *   Every test function *must* contain one or more `assert` statements unless specifically testing for an exception (see rule #8).
+    *   Use specific `pytest` assertion helpers if they improve clarity (though standard `assert` is often sufficient due to pytest's introspection).
+
+4.  **No `print()` Statements:** Avoid `print()` statements in tests. Use `pytest`'s output capturing or standard Python logging if you need to inspect values during test development. (Ref: Ruleset 5.4 of `DEVELOPMENT_GUIDELINES.md`)
+
+5.  **Mocking External Services & Dependencies:** (Ref: Ruleset 5.5 of `DEVELOPMENT_GUIDELINES.md`)
+    *   All external service calls (e.g., remote APIs, databases not part of integration test setup, Slack, Jira, GenAI, Vertex AI) *must* be mocked in unit tests.
+    *   Use `unittest.mock.patch` (often via `pytest-mock`'s `mocker` fixture) for mocking.
+    *   Ensure mocks accurately represent the actual service interfaces and return values relevant to the test case.
+    *   Mock as narrowly as possible. Prefer mocking dependencies injected into your unit under test.
+    *   *Example (using `mocker`):*
+        ```python
+        def test_process_data_with_external_call(mocker):
+            # Arrange
+            mock_api_call = mocker.patch(\'your_module.external_api_call\')
+            mock_api_call.return_value = {"status": "success", "data": "mocked_data"}
+
+            # Act
+            result = your_module.process_data("some_input")
+
+            # Assert
+            mock_api_call.assert_called_once_with("some_input")
+            assert result == "processed_mocked_data"
+        ```
+
+6.  **Use of Fixtures (`pytest` fixtures):**
+    *   Utilize `pytest` fixtures for managing test dependencies, setup, and teardown code to promote reusability and keep tests DRY (Don\'t Repeat Yourself).
+    *   Define fixtures in relevant `conftest.py` files for broader availability or directly in test files for local use.
+    *   *Example:*
+        ```python
+        # conftest.py or in test_file.py
+        import pytest
+
+        @pytest.fixture
+        def sample_user_data():
+            return {"username": "testuser", "email": "test@example.com"}
+
+        def test_create_user(sample_user_data):
+            # Act: use sample_user_data to create a user
+            # Assert: check user creation
+            assert sample_user_data["username"] == "testuser"
+        ```
+
+7.  **Parameterization (`@pytest.mark.parametrize`):**
+    *   Use `@pytest.mark.parametrize` to test functions with multiple different sets of inputs and expected outputs, reducing code duplication and improving test coverage of edge cases.
+    *   *Example:*
+        ```python
+        import pytest
+
+        # function_to_test(a, b) should return a + b
+        @pytest.mark.parametrize("a, b, expected", [
+            (1, 2, 3),
+            (-1, 1, 0),
+            (0, 0, 0),
+            (10, -5, 5),
+        ])
+        def test_addition(a, b, expected):
+            assert your_module.function_to_test(a, b) == expected
+        ```
+
+8.  **Testing for Expected Exceptions:**
+    *   When testing that a function correctly raises an exception, use `pytest.raises` as a context manager.
+    *   Optionally, use the `match` parameter to assert that the exception message contains specific text.
+    *   *Example:*
+        ```python
+        import pytest
+
+        def get_item(item_id: int, item_list: list):
+            if item_id < 0:
+                raise ValueError("Item ID cannot be negative.")
+            if item_id >= len(item_list):
+                raise IndexError("Item ID out of range.")
+            return item_list[item_id]
+
+        def test_get_item_raises_value_error_for_negative_id():
+            with pytest.raises(ValueError, match="Item ID cannot be negative."):
+                get_item(-1, ["a", "b"])
+
+        def test_get_item_raises_index_error_for_out_of_range_id():
+            with pytest.raises(IndexError):
+                get_item(5, ["a", "b"])
+        ```
+
+9.  **Digital Workplace Test Patterns (Review Focus):** (Ref: Ruleset 5.6 of `DEVELOPMENT_GUIDELINES.md`)
+    *   For streaming endpoints, tests *must* validate the response sequence and content as expected.
+    *   Authentication and authorization tests *must* cover all documented auth patterns and permission levels.
+    *   Integration tests *must* verify request/response formats against the defined Pydantic schemas and API design.
+
+10. **Test Coverage:**
+    *   Aim for high test coverage. While a specific percentage isn\'t mandated here (refer to `DEVELOPMENT_GUIDELINES.md` if it specifies one), strive to cover all critical code paths, business logic, and edge cases.
+    *   Use tools like `pytest-cov` to measure coverage and identify untested code.
+
+Consult `DEVELOPMENT_GUIDELINES.md` (Ruleset 5) for complete details on testing conventions.

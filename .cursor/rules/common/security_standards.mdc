@@ -1,5 +1,38 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "General security guidelines for the project, covering topics like API key management, input validation, and authentication/authorization patterns."
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Common Security Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Ruleset 4: Security Best Practices).
+
+These are general security standards applicable across the project. Specific modules or contexts may have additional, more detailed security rules.
+
+1.  **API Key Management:**
+    *   Refer to `DEVELOPMENT_GUIDELINES.md` Ruleset 4.2.
+    *   Secrets and API keys must not be hardcoded. Use configuration management (e.g., `.env` files loaded by `config.py`, environment variables, or a secrets manager).
+
+2.  **Input Validation:**
+    *   Refer to `DEVELOPMENT_GUIDELINES.md` Ruleset 4.4.
+    *   All external inputs (API request parameters, user-provided data) must be validated (e.g., using Pydantic models).
+
+3.  **Authentication & Authorization:**
+    *   Refer to `DEVELOPMENT_GUIDELINES.md` Ruleset 4.1.
+    *   Implement authentication and authorization mechanisms as specified for different parts of the application.
+
+4.  **Error Handling:**
+    *   Refer to `DEVELOPMENT_GUIDELINES.md` Ruleset 4.3.
+    *   Ensure error responses do not leak sensitive information.
+
+5.  **Dependency Security:**
+    *   Keep dependencies updated to avoid known vulnerabilities.
+    *   (Future consideration: automated dependency scanning - see `packaging_cicd_standards.mdc`)
+
+(This file can be expanded with more specific common security rules as needed.)

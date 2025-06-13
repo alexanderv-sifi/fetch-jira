@@ -1,5 +1,53 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for FastAPI routers and endpoints, including Pydantic model usage, async handlers, and versioning."
+globs: ["**/routers/**/*.py", "**/endpoints/**/*.py", "**/api/v*.py"]
+alwaysApply: true
+---
+
+# FastAPI Router & Endpoint Standards
+
+**AI Role Definition:** You are an expert Python developer specializing in FastAPI and the design of secure, scalable, and maintainable APIs. Your primary function is to ensure all API endpoint and router implementations conform to these established standards.
+
+**Project Goal Context:** These standards support our project's goal of delivering robust, well-documented, and easy-to-use APIs that integrate seamlessly with other services and frontend applications, while prioritizing security and performance.
+
+When working on API routers or endpoints in this file:
+
+1.  **Pydantic Models:** Ensure all request and response bodies are strictly defined using Pydantic models from our schema definitions. (Ref: Ruleset 1.1 of `DEVELOPMENT_GUIDELINES.md`)
+2.  **Field Descriptions:** For any Pydantic models defined or used here for I/O, ensure attributes use `Field(description=\"...\")`. (Ref: Ruleset 1.2, 6.4 of `DEVELOPMENT_GUIDELINES.md`)
+3.  **Async Handlers:** All route handlers *must* be `async def`. (Ref: Ruleset 1.4 of `DEVELOPMENT_GUIDELINES.md`)
+4.  **HTTP Status Codes:** Use standard RESTful HTTP status codes as per design (e.g., `201 Created` for POST, `200 OK` for GET/event processing, `404 Not Found` for cache misses). (Ref: Ruleset 1.5 of `DEVELOPMENT_GUIDELINES.md`)
+5.  **Versioning & Naming:**
+    *   API routes *must* be versioned in the path (e.g., `/v1/...`).
+    *   Path and query parameters *must* use `snake_case`. (Ref: Ruleset 1.6 of `DEVELOPMENT_GUIDELINES.md`)
+6.  **Typed Parameters:** All path and query parameters in route handlers *must* have type hints. (Ref: Ruleset 1.7 of `DEVELOPMENT_GUIDELINES.md`)
+7.  **Response Models & Tags:** Use `response_model` for clarity on successful responses and `APIRouter(tags=[\"Descriptive Tag\"])` for OpenAPI grouping and documentation.
+    *   *Example:*
+        ```python
+        from fastapi import APIRouter
+        from pydantic import BaseModel
+
+        # Presumed to be defined in your schemas
+        class Item(BaseModel):
+            id: int
+            name: str
+
+        router = APIRouter(prefix="/items", tags=["Items"])
+
+        @router.get("/{item_id}", response_model=Item)
+        async def read_item(item_id: int):
+            # ... logic to fetch item ...
+            # return Item(id=item_id, name="Example Item")
+            pass # Replace with actual implementation
+        ```
+8.  **Security:** Implement authentication and authorization as specified in Ruleset 4.1 of `DEVELOPMENT_GUIDELINES.md`.
+    *   For Slack-facing endpoints, ensure Slack signature verification middleware/dependency is used.
+    *   For RAG and other protected endpoints, ensure the correct Bearer token validation (or other specified auth mechanism) is applied.
+    *   Do not hardcode secrets or API keys; use configuration management.
+9.  **Error Handling:** Ensure error responses use standardized Pydantic models as defined in Ruleset 4.3 of `DEVELOPMENT_GUIDELINES.md`. This includes consistent error shapes for validation errors (`422`), authentication errors (`401`/`403`), not found errors (`404`), and server errors (`500`).
+
+Always consult `DEVELOPMENT_GUIDELINES.md` (especially Rulesets 1 and 4) for full details.

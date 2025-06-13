@@ -1,5 +1,148 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for creating Pydantic models, covering field definitions, validation, and model configuration."
+globs: ["**/models.py", "**/schemas.py", "**/data_models/**/*.py"]
+alwaysApply: true
+---
+
+# Pydantic Model Definition Standards
+
+**AI Role Definition:** You are a data modeling expert specializing in Pydantic. Your role is to ensure that all Pydantic models are robust, well-documented, type-safe, and adhere to the project\'s conventions for data integrity and API contracts.
+
+**Project Goal Context:** These Pydantic standards are crucial for maintaining data integrity across the application, ensuring clear and enforceable API contracts, facilitating automated documentation, and simplifying data validation and serialization, all of which contribute to a more maintainable and reliable system.
+
+When defining Pydantic models in this file:
+
+1.  **Strict I/O Definition:** These models are crucial for defining API request/response bodies and internal data structures. (Ref: Ruleset 1.1 of `DEVELOPMENT_GUIDELINES.md`)
+2.  **Field Descriptions:** All model attributes intended for API I/O or that benefit from clarification *must* use `Field(description=\"...\")`. (Ref: Ruleset 1.2, 6.4 of `DEVELOPMENT_GUIDELINES.md`)
+    *   *Example:*
+        ```python
+        from pydantic import BaseModel, Field
+
+        class UserProfile(BaseModel):
+            user_id: str = Field(description="The unique identifier for the user.")
+            email: str = Field(description="User\'s primary email address.")
+        ```
+3.  **Snake Case for Fields:** Field names *must* be `snake_case`. (Ref: Ruleset 2.1 of `DEVELOPMENT_GUIDELINES.md`)
+4.  **Type Hinting:** All model fields *must* have accurate Python type hints. Use `Optional[X]` or `X | None` for fields that are not always required.
+5.  **Firestore Conventions (if applicable):** (Ref: Ruleset 2.1, 7.3 of `DEVELOPMENT_GUIDELINES.md`)
+    *   If this model represents a new Firestore document, include `created_at: datetime = Field(default_factory=datetime.utcnow, description=\"Timestamp of document creation.\")`.
+    *   If mutable, include `updated_at: datetime | None = Field(default=None, description=\"Timestamp of last document update.\")`.
+        *   Ensure `updated_at` is set upon modification.
+    *   If it has a TTL, include `expires_at: datetime | None = Field(default=None, description=\"Timestamp when the document should expire.\")` and ensure it\'s calculated correctly based on project requirements.
+    *   *Example:*
+        ```python
+        from datetime import datetime, timezone
+        from pydantic import BaseModel, Field
+
+        class FirestoreDocument(BaseModel):
+            id: str = Field(description="Document ID.")
+            # ... other fields ...
+            created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp of document creation in UTC.")
+            updated_at: datetime | None = Field(default=None, description="Timestamp of last document update in UTC.")
+            expires_at: datetime | None = Field(default=None, description="Optional TTL timestamp in UTC.")
+        ```
+6.  **Input Validation:** Ensure appropriate validation is applied to fields (e.g., `constr`, `gt`, `lt`, `EmailStr`, custom validators). Pydantic handles required fields by default if not `Optional` or `| None`. (Ref: Ruleset 4.4 of `DEVELOPMENT_GUIDELINES.md`)
+    *   *Example:*
+        ```python
+        from pydantic import BaseModel, Field, constr, EmailStr
+
+        class RegistrationForm(BaseModel):
+            username: constr(min_length=3, max_length=50) = Field(description="Username, 3-50 characters.")
+            email: EmailStr = Field(description="Valid email address.")
+            age: int | None = Field(default=None, gt=0, description="Optional age, must be positive if provided.")
+        ```
+7.  **Model Configuration (`model_config`):**
+    *   If models should not allow undeclared fields, use `model_config = {"extra": "forbid"}`.
+    *   Consider other `model_config` settings like `validate_assignment = True` if appropriate for the model\'s use case.
+    *   Refer to Ruleset 2.x (as applicable in `DEVELOPMENT_GUIDELINES.md`) for project-wide model configurations.
+    *   *Example:*
+        ```python
+        from pydantic import BaseModel, Field
+
+        class StrictModel(BaseModel):
+            model_config = {"extra": "forbid", "validate_assignment": True}
+
+            name: str = Field(description="Name of the entity.")
+        ```
+8.  **Standardized Response Structures (if applicable):** If this model is for a standard response type (e.g., a generic API response wrapper, specific Bot responses, Query results, RAG outputs), ensure it includes all required fields as per Ruleset 1.3 of `DEVELOPMENT_GUIDELINES.md`.
+
+Consult `DEVELOPMENT_GUIDELINES.md` (especially Rulesets 1, 2, 4, and 6) for complete details.
+
+# Pydantic Model Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Ruleset 2: Pydantic for all data structures, field descriptions, validation, `model_config`).
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.md` (Sections 2.7 "Data Validation" and supporting the definition of an output schema).
+
+1.  **Usage of Pydantic:**
+    *   Pydantic **should** be used for defining data structures that represent:
+        *   The expected structure of responses from external APIs (Jira, Confluence, GDrive) to aid in validation and parsing. These models would typically reside within or be used by the respective client modules (`jira_client.py`, etc.).
+        *   The internal representation of enriched Jira issues and related data processed by `data_processor.py`.
+        *   The schema for the final output data generated by `output_manager.py`.
+        *   Complex configuration objects in `config.py`, if applicable.
+
+2.  **Model Definition:**
+    *   Models **must** inherit from `pydantic.BaseModel`.
+    *   **Type Hinting:** All fields must have explicit type hints.
+    *   **Field Descriptions:** All fields **must** have a `description` provided via `Field(description="...")`. This is crucial for clarity and future schema generation (as per `DEVELOPMENT_GUIDELINES.md` Ruleset 6).
+    *   **Default Values:** Provide sensible default values for optional fields using `Field(default=...)` or `Field(default_factory=...)`.
+    *   **Examples:** For complex fields or to illustrate usage, consider adding examples using `Field(examples=[...])`.
+
+3.  **Validation:**
+    *   Utilize Pydantic\'s built-in validation capabilities (e.g., type enforcement, required fields).
+    *   For more complex validation scenarios, use Pydantic validators (`@validator`, `@root_validator`).
+    *   Validators should be clear, concise, and raise appropriate `ValueError` exceptions upon failure, which Pydantic will convert into `ValidationError`.
+
+4.  **Model Configuration (`model_config` or `Config` class):**
+    *   Use `model_config = ConfigDict(...)` (Pydantic V2) or a nested `Config` class (Pydantic V1) for model-level settings.
+    *   Consider settings like:
+        *   `extra = \'ignore\'` or `extra = \'forbid\'`: To control behavior for extra fields encountered during parsing (default is `\'ignore\'`). `\'forbid\'` can be useful for strict API response validation.
+        *   `populate_by_name = True`: To allow populating model fields by alias (e.g., if API field names are not valid Python identifiers).
+        *   `alias_generator`: To automatically generate aliases (e.g., camelCase for JSON, snake_case for Python).
+
+5.  **Nested Models:** Compose complex data structures using nested Pydantic models for better organization and reusability.
+
+6.  **Readability:**
+    *   Keep model definitions clean and readable.
+    *   Group related fields together.
+    *   For very large models, consider breaking them down if logical.
+
+7.  **Location of Models:**
+    *   Models specific to an API client\'s response structure can reside within or alongside that client module.
+    *   Models representing the core processed data (e.g., the enriched Jira issue) might live in a dedicated `models.py` file or within `data_processor.py` if closely tied to its logic.
+    *   Output schema models might be defined in `output_manager.py` or a shared `models.py`.
+
+8.  **Evolution and Versioning:**
+    *   Be mindful that API response structures can change. Pydantic models help catch these changes early.
+    *   If dealing with versioned APIs or evolving schemas, consider strategies for managing different model versions (though not an immediate requirement for this project plan).
+
+**Example Snippet:**
+```python
+from pydantic import BaseModel, Field, HttpUrl
+from typing import List, Optional
+from datetime import datetime
+
+class JiraIssueRemoteLink(BaseModel):
+    id: int = Field(description="The ID of the remote link.")
+    self_url: HttpUrl = Field(alias="self", description="URL of the remote link resource.")
+    # ... other relevant remote link fields
+
+class EnrichedJiraIssue(BaseModel):
+    key: str = Field(description="The Jira issue key, e.g., PROJECT-123.")
+    summary: str = Field(description="The summary of the Jira issue.")
+    description: Optional[str] = Field(default=None, description="The detailed description of the issue.")
+    created_at: datetime = Field(alias="created", description="Timestamp of when the issue was created.")
+    # ... other core Jira fields
+
+    remote_links: List[JiraIssueRemoteLink] = Field(default_factory=list, description="Associated remote links.")
+    # ... other enriched data like subtasks, confluence_pages, gdrive_files
+
+    model_config = {
+        "populate_by_name": True,
+        "extra": "ignore"
+    }
+```

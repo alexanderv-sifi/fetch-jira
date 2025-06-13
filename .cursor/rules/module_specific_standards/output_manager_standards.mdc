@@ -1,5 +1,71 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for the output_manager.py module, covering data formatting, saving to files, and potential future output methods."
+globs: ["**/output_manager.py"] # Primarily applies to output_manager.py
+alwaysApply: true
+---
+
+# Output Manager (`output_manager.py`) Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Core Principles, Ruleset related to data handling if applicable for output schemas)
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.MD`, Section 1: "Code Restructuring and Modularization" (defining `output_manager.py`).
+**Referenced By:** `00_ai_assistant_directives.mdc`
+
+## 1. Purpose of `output_manager.py`:
+*   This module is responsible for handling the final output of the processed and enriched data.
+*   Its primary current function is to save data to JSON files.
+*   It should be designed to be extensible for future output formats (e.g., JSON Lines, CSV, direct database insertion) or streaming outputs.
+
+## 2. Core Functionality:
+*   **`save_to_json(data: list[EnrichedJiraIssue] | EnrichedJiraIssue, filename: str)`:** (Assuming `EnrichedJiraIssue` is the Pydantic model from `data_processor.py`)
+    *   Takes the processed data (either a single enriched issue or a list of them) and a filename.
+    *   Serializes the Pydantic model(s) to a JSON string. Pydantic's `.model_dump_json(indent=2)` is suitable for pretty-printed JSON.
+    *   Writes the JSON string to the specified file.
+    *   Should handle file I/O exceptions gracefully (e.g., `IOError`, `PermissionError`).
+*   **Filename and Path Management:**
+    *   May include logic for generating output filenames based on input parameters (e.g., JQL query, project key, timestamp) or receive fully qualified paths.
+    *   Ensure output directories are created if they don't exist (e.g., using `os.makedirs(exist_ok=True)`).
+
+## 3. Data Format and Schema:
+*   The data passed to the output manager should be structured according to well-defined Pydantic models (e.g., `EnrichedJiraIssue` from `data_processor.py`).
+*   The output manager is responsible for serializing these models into the target format (currently JSON).
+*   For JSON output, ensure consistent formatting (e.g., indentation for readability, consistent date/datetime string formats if not handled by Pydantic's default serialization).
+
+## 4. Extensibility:
+*   While initially focused on JSON, the module should be structured to allow adding new output functions easily.
+    *   Example: `save_to_json_lines(data: list[EnrichedJiraIssue], filename: str)`
+    *   Example: `stream_to_console(data_iterator: Iterator[EnrichedJiraIssue])`
+*   Consider a class-based approach if multiple output methods share common setup or state, though simple functions may suffice initially.
+
+## 5. Error Handling:
+*   Implement robust error handling for file I/O operations:
+    *   Catch `IOError`, `PermissionError`, etc.
+    *   Log errors clearly, including the filename and the nature of the error. Refer to `common/logging_standards.mdc`.
+*   Handle errors during data serialization if they are possible (though Pydantic usually handles this well).
+
+## 6. Configuration:
+*   May take configuration from `config.py` for things like:
+    *   Default output directory.
+    *   JSON indentation level.
+    *   Date/time formatting preferences for output (if not using Pydantic defaults).
+
+## 7. Checkpointing and Resumability (Interaction):
+*   While `output_manager.py` itself might not manage checkpointing state, it plays a role in resumable operations as per `PROJECT_DEVELOPMENT_PLAN.md` (Section 2.5).
+*   It needs to be able to write data in a way that supports resumption (e.g., overwriting files for a given run, or appending if the output format and overall logic supports it, such as with JSON Lines).
+*   Idempotency of output (as per `PROJECT_DEVELOPMENT_PLAN.md` Section 2.6) is key: re-running with the same inputs should produce the same output file content, typically by overwriting.
+
+## 8. Streaming Output (Future Consideration):
+*   As per `PROJECT_DEVELOPMENT_PLAN.md` (Section 2.10), for very large exports, `output_manager.py` might need to support streaming output (e.g., JSON Lines) to disk instead of accumulating all data in memory before writing. This would involve:
+    *   Receiving an iterator of processed items rather than a complete list.
+    *   Writing each item to the file as it arrives.
+
+## 9. Testability:
+*   Output manager functions should be testable.
+*   Tests might involve:
+    *   Mocking file system operations (`open`, `write`) using `unittest.mock.patch` or `pyfakefs` to verify that the correct data is being written without actual file I/O.
+    *   Providing sample Pydantic models and checking the serialized output (e.g., JSON string) for correctness.
+*   Refer to `common/testing_standards.mdc`.

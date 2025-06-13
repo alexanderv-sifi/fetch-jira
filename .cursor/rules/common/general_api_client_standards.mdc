@@ -1,5 +1,39 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines common standards for all API client modules, including encapsulation, authentication, error handling, and logging."
+globs: ["**/*_client.py", "**/clients/*.py"]
+alwaysApply: true
+---
+
+# General API Client Standards (Common Across All Clients)
+
+**Purpose:** This document outlines common standards that apply to ALL API client modules within this project (e.g., `jira_client.py`, `confluence_client.py`, `gdrive_client.py`). Specific client modules will have their own supplementary standards documents.
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (main project guidelines)
+**Project-Specific Context:** `PROJECT_DEVELOPMENT_PLAN.MD`, particularly Sections 1 (Module Breakdown) and 2.2 (Error Handling & Retry Mechanisms).
+
+## Core Principles:
+1.  **Encapsulation:**
+    *   Each external service **must** have its own dedicated client module (e.g., `jira_client.py`).
+    *   All direct API calls (e.g., using `requests`, `google-api-python-client`) and service-specific logic must be encapsulated within its respective module.
+2.  **Authentication & Configuration:**
+    *   Client modules are responsible for handling their own authentication.
+    *   API keys, tokens, base URLs, and other sensitive configurations **must** be sourced from `config.py`.
+3.  **API Call Delays & Semaphores:**
+    *   Each client module **must** manage its own API call delays and utilize semaphores (with limits defined in `config.py`) to respect the rate limits of the respective external service.
+4.  **Error Handling & Retries:**
+    *   Implement robust error handling for API responses, clearly differentiating between:
+        *   Transient errors (e.g., HTTP 429 Too Many Requests, 5xx Server Errors).
+        *   Permanent errors (e.g., HTTP 401 Unauthorized, 403 Forbidden, 404 Not Found).
+    *   Utilize the `tenacity` library for retry mechanisms (as suggested in `PROJECT_DEVELOPMENT_PLAN.MD` 2.2), applying exponential backoff and jitter for transient errors.
+    *   Each service-specific client should define and raise its own custom exceptions (e.g., `JiraApiError`, `ConfluenceRateLimitError`) for clarity and granular error handling by calling modules. The pattern for these exceptions should be consistent.
+5.  **Request/Response Logging:**
+    *   Log essential details of API requests (URL, method, key non-sensitive parameters like issue ID/JQL) and responses (status code, key identifiers from response).
+    *   Mask any sensitive data (like API tokens or personal identifiable information) in logs.
+    *   Adhere to project-wide logging standards (see `logging_standards.mdc` or `DEVELOPMENT_GUIDELINES.md` Ruleset 3) regarding log levels (e.g., DEBUG for full details, INFO for summaries, WARNING/ERROR for failures).
+6.  **Testability:**
+    *   Design client modules to be easily testable. This typically involves allowing external dependencies (like `requests.Session` objects or Google API service objects) to be injected, facilitating mocking in unit tests. (Refer to `testing_standards.mdc` or `DEVELOPMENT_GUIDELINES.md` Ruleset 5).

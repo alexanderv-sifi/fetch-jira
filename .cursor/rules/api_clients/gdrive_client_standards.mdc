@@ -1,5 +1,38 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Specific standards for the Google Drive API client module (gdrive_client.py)."
+globs: ["**/gdrive_client.py"]
+alwaysApply: true
+---
+
+# Google Drive API Client Standards
+
+**Purpose:** This document outlines specific standards for the `gdrive_client.py` module, supplementing the `common/general_api_client_standards.mdc`.
+
+**Supplements:** `.cursor/rules/common/general_api_client_standards.mdc`
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md`
+**Project-Specific Context:** `PROJECT_DEVELOPMENT_PLAN.MD`, Sections 1 (module breakdown for `gdrive_client.py`) and 2.2 (Error Handling & Retry Mechanisms).
+
+## Module Specifics:
+1.  **Module Name:** `gdrive_client.py`
+2.  **Core Functionality (as per `PROJECT_DEVELOPMENT_PLAN.MD`):
+    *   `get_google_drive_service()`: Initializes and returns the Google Drive API service object. Authentication should be handled within this or a related utility.
+    *   `fetch_drive_item_metadata(item_id: str)`: Fetches metadata for a Google Drive item (file or folder).
+    *   `download_drive_file_content(file_id: str, mime_type: str, file_name: str)`: Downloads the content of a file from Google Drive.
+    *   `fetch_drive_item_recursive(service, item_id: str)`: Recursively fetches information about a Drive item and its children (if it's a folder).
+3.  **Specific Error Handling:**
+    *   Raise `GoogleDriveApiError` (custom exception) for general Google Drive API request failures.
+    *   Raise `GoogleDriveRateLimitError` (custom exception) for API rate limit errors (e.g., HTTP 403 with `reason: 'userRateLimitExceeded'` or `reason: 'rateLimitExceeded'`).
+    *   Raise `GoogleDriveAuthenticationError` (custom exception) for authentication failures (e.g., HTTP 401).
+    *   Raise `GoogleDriveItemNotFoundError` (custom exception) for HTTP 404 errors when an item is not found.
+4.  **Specific Logging Details:**
+    *   Log `item_id` or `file_id` for relevant function calls at DEBUG/INFO level.
+    *   Log details about file downloads, such as `file_name` and `mime_type`.
+    *   Log any specific error reasons provided by the Google Drive API upon failure.
+5.  **Google Drive-Specific Configurations (from `config.py`):**
+    *   Ensure the client uses configurations such as `GOOGLE_API_CREDENTIALS_PATH`, `GOOGLE_DRIVE_SEMAPHORE_LIMIT` from `config.py`.
+    *   Manage API scopes required for Google Drive operations correctly.

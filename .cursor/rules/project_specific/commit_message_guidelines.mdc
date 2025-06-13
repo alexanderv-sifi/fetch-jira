@@ -1,5 +1,97 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Specifies the Conventional Commits format and guidelines for writing clear, concise, and informative commit messages."
+globs: [] # Typically not applied to files directly, but serves as a guideline for developers and CI.
+alwaysApply: false # This rule is for developer guidance, not direct code linting by the AI against specific files.
+---
+
+# Commit Message Guidelines
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Ruleset 8: Version Control & Commit Hygiene)
+**Referenced By:** `00_ai_assistant_directives.mdc`
+
+## 1. Format: Conventional Commits
+All commit messages **must** adhere to the Conventional Commits specification v1.0.0. The basic format is:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+## 2. Type:
+The `<type>` tag is mandatory and must be one of the following:
+
+*   **`feat`**: A new feature for the user or a significant enhancement to existing functionality.
+*   **`fix`**: A bug fix for the user.
+*   **`docs`**: Documentation-only changes (e.g., to `README.md`, docstrings, rule files).
+*   **`style`**: Changes that do not affect the meaning or behavior of the code (e.g., white-space, formatting, missing semi-colons, code style adjustments by linters like Black).
+*   **`refactor`**: A code change that neither fixes a bug nor adds a feature, but improves the internal structure, design, or performance of the code.
+*   **`perf`**: A code change that specifically improves performance.
+*   **`test`**: Adding missing tests, correcting existing tests, or improving the test suite.
+*   **`build`**: Changes that affect the build system, project configuration files, or external dependencies (e.g., `pyproject.toml`, `uv.lock`, `Dockerfile`, CI workflow files).
+*   **`ci`**: Changes to CI configuration files and scripts (e.g., GitHub Actions workflows).
+*   **`chore`**: Other changes that don't modify `src` or `test` files, and don't fit into other categories (e.g., updating `.gitignore`, routine maintenance tasks).
+*   **`revert`**: If the commit reverts a previous commit. The header should be `revert: <header of reverted commit>`, and the body should state `This reverts commit <hash>.`
+
+## 3. Scope (Optional):
+The `scope` provides contextual information about the part of the codebase affected by the change. It is contained within parentheses following the type.
+*   Examples: `feat(jira_client): ...`, `fix(config): ...`, `docs(readme): ...`
+*   Use a short, descriptive scope, typically a module name or a key component.
+
+## 4. Description (Subject Line):
+*   **Mandatory.** A concise summary of the code changes.
+*   Use the **imperative, present tense**: "add" not "added" nor "adds".
+*   **Do not capitalize** the first letter (unless it's a proper noun or acronym that is always capitalized).
+*   **No dot (.)** at the end.
+*   Keep the subject line to **50-72 characters** if possible for readability in Git logs.
+
+## 5. Body (Optional):
+*   Use the body to explain *what* was changed and *why* it was changed, as opposed to *how* (the code itself shows the how).
+*   Provide more context if the description is not sufficient, especially for complex changes.
+*   Separate the body from the subject line with a **blank line**.
+*   Use imperative, present tense.
+*   Wrap lines at around 72 characters for readability.
+
+## 6. Footer(s) (Optional):
+*   Separate footer(s) from the body with a **blank line**.
+*   **Breaking Changes:**
+    *   A commit that introduces a breaking API change **must** include `BREAKING CHANGE:` as a footer, followed by a description of the breaking change.
+    *   Alternatively, a `!` can be appended to the type/scope to draw attention to the breaking change (e.g., `feat(auth)!: ...`), and the `BREAKING CHANGE:` footer is still required.
+*   **Issue Tracking:** Reference issue numbers from your project management tool (e.g., Jira, GitHub Issues).
+    *   Examples: `Refs: #123`, `Fixes: PROJECT-456`, `Closes: TSK-101`.
+
+## 7. Atomic Commits:
+*   Commits should be small, atomic units of work. Each commit should ideally represent a single logical change or address a single specific issue.
+*   Avoid large, monolithic commits that bundle unrelated changes. This makes code reviews harder and project history more difficult to navigate.
+
+## 8. Clarity and Rationale:
+*   Write clear and meaningful commit messages. They are crucial for understanding project history, for automated changelog generation (if used), and for effective collaboration.
+*   If a change is non-obvious, explain the reasoning behind it in the commit body.
+
+## Example:
+```
+feat(jira_client): add support for fetching issue attachments
+
+Implement the ability to download attachments associated with a Jira issue.
+This includes handling various MIME types and storing them appropriately.
+The configuration for attachment storage path will be added in a subsequent commit.
+
+Fixes: #789
+Refs: PROJECT-DEV-102
+```
+
+## Example with Breaking Change:
+```
+refactor(config)!: change configuration loading from .ini to .yaml
+
+BREAKING CHANGE: The configuration file format has been changed from `.ini`
+to `.yaml`. Users will need to update their `config.yaml` files accordingly.
+This change allows for more complex and structured configuration.
+```

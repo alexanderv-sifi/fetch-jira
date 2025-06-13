@@ -1,5 +1,61 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for the data_processor.py module, focusing on data enrichment, transformation, and interaction with API clients."
+globs: ["**/data_processor.py", "**/issue_enricher.py"] # Applies to data_processor.py or equivalent
+alwaysApply: true
+---
+
+# Data Processor (`data_processor.py`) Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Core Principles: Modularity, Clear Interfaces)
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.MD`, Section 1: "Code Restructuring and Modularization" (defining `data_processor.py` or `issue_enricher.py`).
+**Referenced By:** `00_ai_assistant_directives.mdc`
+
+## 1. Purpose of `data_processor.py`:
+*   This module contains the higher-level logic for processing and enriching Jira issues.
+*   It orchestrates calls to various client modules (`jira_client.py`, `confluence_client.py`, `gdrive_client.py`) to fetch related data (subtasks, linked issues, epic children, remote link content).
+*   It aggregates all fetched data for a given Jira issue into a comprehensive, structured Pydantic model.
+*   It **should not** directly make API calls; this is the responsibility of the client modules.
+
+## 2. Core Functionality:
+*   The central function will likely be similar to `process_issue_and_related_data(issue_json: dict, skip_remote_content: bool = False) -> EnrichedJiraIssue:` (or a similar Pydantic model for the return type).
+    *   Takes a raw Jira issue (as a dictionary or Pydantic model) as input.
+    *   Fetches related Jira data (subtasks, parent epics, linked issues) using batch methods from `jira_client.py` where possible to improve efficiency.
+    *   Processes remote links (Confluence, Google Drive) by calling the respective client modules (`confluence_client.py`, `gdrive_client.py`).
+    *   Handles potential errors from client calls gracefully (e.g., a linked Confluence page not being found should not necessarily stop the processing of the main Jira issue, but should be logged).
+    *   Constructs and returns a rich, consolidated Pydantic model representing the issue and all its related, fetched data.
+
+## 3. Interaction with Client Modules:
+*   The `data_processor.py` module **must** interact with client modules (`jira_client.py`, `confluence_client.py`, `gdrive_client.py`) through their well-defined public interfaces.
+*   It should pass necessary identifiers (issue keys, page IDs, file IDs) and configuration (e.g., from `config.settings`) to client functions.
+
+## 4. Data Models:
+*   **Input:** Expects raw Jira issue data, typically as a dictionary parsed from JSON or a basic Pydantic model representing a raw Jira issue.
+*   **Output:** **Must** return data structured according to a well-defined Pydantic model (e.g., `EnrichedJiraIssue`), which should be defined in `models.py` (or `schemas/`) or within `data_processor.py` if tightly coupled and not used elsewhere. Refer to `data_models/pydantic_model_standards.mdc`.
+*   Intermediate Pydantic models can be used internally for clarity if complex transformations occur.
+
+## 5. Error Handling:
+*   Implement robust error handling for operations within this module.
+*   Catch exceptions raised by client modules (e.g., `JiraApiError`, `ConfluencePageNotFoundError`).
+*   Decide whether an error in fetching a piece of related data is critical enough to stop processing for the main issue or if it can be logged and skipped. This logic should be clearly defined.
+    *   For example, if the main Jira issue itself cannot be fetched (though `data_processor` likely receives an already fetched issue), that's a critical failure.
+    *   If a linked Confluence page returns a 404, this might be logged as a warning, and the enriched issue will simply not contain that page's content.
+*   Log errors with sufficient context (e.g., Jira issue key, ID of the problematic linked item). Refer to `common/logging_standards.mdc`.
+
+## 6. Concurrency and Performance:
+*   The `data_processor.py` module, particularly its main processing function, is likely to be called concurrently by `main.py` (e.g., via `ThreadPoolExecutor`).
+*   Ensure functions within `data_processor.py` are thread-safe if they modify shared state (though this should be rare; prefer functional approaches passing data).
+*   Be mindful of performance. If fetching many related items (e.g., dozens of subtasks or remote links for a single issue), ensure client modules are used efficiently (e.g., batch API calls if supported by clients).
+
+## 7. Business Logic:
+*   This module is the primary location for business logic related to how different pieces of information are connected and aggregated.
+*   For example, logic to determine how to summarize content from linked pages, or how to structure the hierarchy of epics, tasks, and subtasks, would reside here.
+
+## 8. Testability:
+*   Functions within `data_processor.py` should be highly testable.
+*   Unit tests should mock the API client modules to provide controlled input data (mock Jira issues, mock Confluence page content, etc.) and verify the structure and content of the returned enriched Pydantic model.
+*   Refer to `common/testing_standards.mdc`.

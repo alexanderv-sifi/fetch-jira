@@ -1,5 +1,95 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for the config.py module, covering configuration loading, validation, and secrets management for the fetch-jira utility."
+globs: ["**/config.py"] # Primarily applies to config.py
+alwaysApply: true
+---
+
+# Configuration (`config.py`) Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (especially Ruleset 4.2 for API Key Management)
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.MD`, Section 2.1: "Enhanced Configuration Management" and module definition for `config.py`.
+**Referenced By:** `00_ai_assistant_directives.mdc`, `common/security_standards.mdc`, various API client standards.
+
+## 1. Purpose of `config.py`:
+*   The `config.py` module is the central place for loading, managing, and providing access to all application configurations.
+*   It should handle sourcing configurations from environment variables and/or `.env` files.
+*   It should store global constants related to application behavior (e.g., API call delays, semaphore limits, default JQL queries if any).
+
+## 2. Configuration Loading:
+*   **Environment Variables First:** The primary method for sourcing configuration, especially in production and CI/CD environments, **must** be system environment variables.
+*   **`.env` File for Local Development:** For local development convenience, the application **must** support loading configurations from a `.env` file located in the project root.
+    *   Use a library like `python-dotenv` (e.g., `load_dotenv()`).
+    *   Variables loaded from `.env` should **not** override already set system environment variables to ensure production/CI settings take precedence.
+*   **`.env.example`:** A `.env.example` file **must** be maintained in the project root, listing all required environment variables with placeholder values or descriptions. This file **must not** contain real secrets.
+
+## 3. Configuration Parameters:
+*   All configuration parameters **must** be defined as strongly-typed variables or Pydantic model fields within `config.py`.
+*   Use uppercase for global constants (e.g., `MAX_RESULTS_PER_JIRA_PAGE`).
+*   For related sets of configurations (e.g., Jira settings, Confluence settings), consider using Pydantic models to group them for better organization and validation.
+
+```python
+# Example using Pydantic for grouped settings in config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import HttpUrl, SecretStr, PositiveInt
+
+class JiraSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='JIRA_') # Looks for JIRA_BASE_URL etc.
+
+    base_url: HttpUrl
+    api_username: str | None = None # Optional if using token-based auth primarily
+    api_token: SecretStr
+    semaphore_limit: PositiveInt = 5
+    # Add other Jira-specific settings
+
+class Config(BaseSettings):
+    # General settings
+    log_level: str = "INFO"
+    max_workers: PositiveInt = 10
+
+    # Service settings
+    jira: JiraSettings = JiraSettings()
+    # confluence: ConfluenceSettings = ConfluenceSettings() # Example
+    # gdrive_project_id: str | None = None # Example for GDrive
+
+    # API Behavior
+    max_results_per_jira_page: PositiveInt = 100
+    default_api_call_delay_seconds: float = 0.1
+
+# Instantiate once and import this instance elsewhere
+settings = Config()
+
+# Example usage in another module:
+# from .config import settings
+# print(settings.jira.base_url)
+# print(settings.max_workers)
+```
+
+## 4. Secrets Management:
+*   API tokens, passwords, and other sensitive credentials **must never** be hardcoded in source code.
+*   They **must** be loaded from environment variables (or `.env` for local development).
+*   Pydantic's `SecretStr` type can be used to handle secrets, which helps prevent accidental logging.
+*   For production environments, consider integration with a dedicated secrets management system (e.g., HashiCorp Vault, cloud provider secret managers), although direct environment variable sourcing is the baseline.
+
+## 5. Validation:
+*   Configuration values should be validated upon loading.
+    *   Pydantic `BaseSettings` provides automatic validation based on type hints and validation attributes (e.g., `PositiveInt`, `HttpUrl`).
+    *   For critical missing configurations, the application should fail fast at startup with a clear error message.
+*   Type hints **must** be used for all configuration variables.
+
+## 6. Accessing Configuration:
+*   Other modules should import the necessary configuration variables or settings objects directly from `config.py`.
+*   Avoid scattering configuration loading logic across multiple modules.
+
+## 7. Default Values:
+*   Provide sensible default values for non-critical configuration parameters where appropriate.
+*   Defaults should be defined directly in `config.py` (e.g., within Pydantic model field definitions).
+
+## 8. Structure of `config.py`:
+*   Keep `config.py` clean, well-organized, and easy to understand.
+*   Use comments to explain non-obvious configuration parameters.
+*   If using Pydantic `BaseSettings`, the structure is largely defined by the model. If using plain variables, group related constants and variables.

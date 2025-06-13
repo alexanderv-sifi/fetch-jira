@@ -1,5 +1,117 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for the main.py CLI script, covering argument parsing, command structure, and user interaction for the fetch-jira utility."
+globs: ["**/main.py", "**/fetch_jira_cli.py"] # Primarily applies to main.py or equivalent CLI entry point
+alwaysApply: true
+---
+
+# Main CLI (`main.py`) Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (general principles for application entry points and user interaction)
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.MD`, Section 1: "Code Restructuring and Modularization" (defining `main.py` or `fetch_jira_cli.py`).
+**Referenced By:** `00_ai_assistant_directives.mdc`
+
+## 1. Purpose of `main.py`:
+*   Serves as the primary command-line interface (CLI) entry point for the `fetch-jira` utility.
+*   Responsible for parsing command-line arguments.
+*   Orchestrates the overall fetching and processing workflow by calling functions from other modules (e.g., `config.py`, `data_processor.py`, `output_manager.py`).
+*   Manages concurrency (e.g., using `ThreadPoolExecutor`).
+*   Handles top-level error reporting to the user.
+
+## 2. Argument Parsing:
+*   **Library:** **Must** use the `argparse` module from the Python standard library for parsing command-line arguments. (While libraries like `Click` or `Typer` are powerful, `argparse` is sufficient for the planned scope and avoids an extra dependency unless future CLI complexity significantly increases).
+*   **Arguments:**
+    *   Define clear, descriptive argument names (e.g., `--jql`, `--project-key`, `--output-file`).
+    *   Use `help` messages for all arguments to explain their purpose and format.
+    *   Specify `type` for arguments where appropriate (e.g., `type=int`).
+    *   Define `required=True` for mandatory arguments.
+    *   Consider `nargs` for arguments that can take multiple values (e.g., multiple issue keys).
+    *   Provide sensible `default` values for optional arguments if applicable, sourcing defaults from `config.py` where appropriate.
+    *   Implement sub-commands if the CLI grows to have distinct modes of operation (e.g., `fetch-jira issues ...`, `fetch-jira config ...`), though not explicitly planned initially.
+*   **Example `argparse` Setup:**
+    ```python
+    import argparse
+    # from .config import settings # Assuming settings are loaded
+
+    # def main():
+    #     parser = argparse.ArgumentParser(description="Fetch-Jira Utility: Fetches and enriches Jira issue data.")
+    #     parser.add_argument("--jql", type=str, help="JQL query to fetch issues.")
+    #     parser.add_argument("--issue-keys", nargs="+", help="One or more Jira issue keys to fetch.")
+    #     parser.add_argument("--project-key", type=str, help="Jira project key to fetch all issues from (use with caution).")
+    #     parser.add_argument(
+    #         "--output-file",
+    #         type=str,
+    #         default="jira_export.json", # Or derive from config.settings.default_output_filename
+    #         help="Path to the output JSON file."
+    #     )
+    #     parser.add_argument(
+    #         "--skip-remote-content",
+    #         action="store_true",
+    #         help="Skip fetching content from remote links (Confluence, GDrive)."
+    #     )
+    #     parser.add_argument(
+    #         "--max-workers",
+    #         type=int,
+    #         # default=settings.max_workers, # Example of using config for default
+    #         help="Maximum number of worker threads for concurrent processing."
+    #     )
+    #     # Add verbosity/logging level argument
+    #     parser.add_argument(
+    #         "-v", "--verbose",
+    #         action="count",
+    #         default=0, # Corresponds to INFO; 1 for DEBUG
+    #         help="Increase output verbosity (e.g., -v for DEBUG)."
+    #     )
+
+    #     args = parser.parse_args()
+
+    #     # Setup logging based on args.verbose
+    #     # Initialize configurations (config.py should handle most of this)
+    #     # Implement main workflow based on args...
+    ```
+
+## 3. Workflow Orchestration:
+*   Based on parsed arguments, `main.py` should:
+    1.  Initialize configurations (largely handled by importing from `config.py`).
+    2.  Set up logging (adjusting log level based on verbosity arguments). Refer to `common/logging_standards.mdc`.
+    3.  Determine the set of Jira issues to fetch (from JQL, issue keys, or project key).
+    4.  Use `jira_client.py` to fetch the initial batch of issues or issue details.
+    5.  Utilize a `concurrent.futures.ThreadPoolExecutor` to process issues concurrently.
+        *   The number of workers for the executor should be configurable (e.g., via `--max-workers` argument, defaulting to a value from `config.py`).
+    6.  For each issue, submit a task to the executor that calls the main function in `data_processor.py` (e.g., `process_issue_and_related_data`).
+    7.  Collect results from the executor.
+    8.  Pass the collected, enriched data to `output_manager.py` for saving.
+    9.  Provide progress indication to the user (e.g., number of issues processed, estimated time remaining if feasible).
+    10. Report final status (e.g., "Successfully exported X issues to Y.json").
+
+## 4. User Feedback and Logging:
+*   Provide clear feedback to the user via `print()` statements for essential progress and final status messages.
+*   Use structured logging (`structlog` via `common/logging_standards.mdc`) for detailed operational logs, with verbosity controlled by a CLI argument.
+    *   Example: `-v` for DEBUG, default for INFO.
+*   Log the effective configuration being used at the start of execution (at DEBUG level, masking secrets).
+
+## 5. Error Handling:
+*   Implement robust top-level error handling.
+*   Catch exceptions that propagate from other modules (e.g., `ConfigurationError` from `config.py`, `JiraApiError` from `jira_client.py`, `IOError` from `output_manager.py`).
+*   Print user-friendly error messages to `stderr`.
+*   Log detailed error information (including stack traces for unexpected errors) using the logging framework.
+*   Exit with appropriate non-zero status codes upon failure (e.g., `sys.exit(1)`).
+    *   `1`: General error.
+    *   Consider specific exit codes for different error categories if useful for scripting.
+
+## 6. Entry Point:
+*   The script should be executable directly (e.g., `python main.py --jql "project=TEST"`).
+*   Include the standard `if __name__ == "__main__":` block to call the main orchestrating function.
+
+## 7. Modularity:
+*   `main.py` should focus on CLI aspects and orchestration.
+*   Core business logic, API interaction, data processing, and output formatting **must** reside in their respective dedicated modules. Avoid putting complex logic directly into `main.py` functions; delegate to other modules.
+
+## 8. Testability:
+*   While end-to-end CLI testing can be complex, the core orchestrating logic within `main.py` (if refactored into testable functions separate from `argparse` setup) can be unit-tested by mocking the modules it calls (`config`, `jira_client`, `data_processor`, `output_manager`).
+*   Consider simple CLI invocation tests using `subprocess` for basic argument parsing checks if deemed necessary.
+*   Refer to `common/testing_standards.mdc`.

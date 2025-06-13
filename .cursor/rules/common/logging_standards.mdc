@@ -1,5 +1,42 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for application logging, emphasizing structured logging using structlog and appropriate log levels."
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Logging Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Ruleset 3: Logging - use `structlog` only, contextual logging, correct log levels).
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.md`, Section 2.3: "Comprehensive Logging and Monitoring".
+
+1.  **Logging Library:** **Must** use `structlog` for all application logging, as per `DEVELOPMENT_GUIDELINES.md`.
+
+2.  **Structured Logging:**
+    *   All log output **must** be structured, preferably in JSON format, for easier parsing by log management systems (e.g., ELK, Splunk, Datadog) as specified in `PROJECT_DEVELOPMENT_PLAN.md` 2.3.
+    *   Configuration for `structlog` (processors, output format) should be handled in `main.py` during application initialization, potentially influenced by `config.py`.
+
+3.  **Contextual Logging:**
+    *   Include relevant contextual information in log entries. This includes, but is not limited to:
+        *   Issue keys (e.g., `issue_key="PROJECT-123"`)
+        *   JQL queries being processed (mask sensitive parts if necessary)
+        *   Relevant identifiers from API calls (e.g., `page_id`, `file_id`)
+        *   Function or module name where the log originated, if not automatically added by `structlog` processors.
+    *   Use `structlog`'s binding capabilities (e.g., `logger.bind(key=value)`) to add context.
+
+4.  **Log Levels:** Adhere to standard log levels and use them appropriately as per `DEVELOPMENT_GUIDELINES.md`:
+    *   `DEBUG`: Detailed information, typically of interest only when diagnosing problems. For example, full API request/response bodies (mask sensitive data), detailed flow within a function.
+    *   `INFO`: Confirmation that things are working as expected. For example, application startup, completion of major operations (e.g., "Successfully processed X issues"), significant lifecycle events.
+    *   `WARNING`: An indication that something unexpected happened, or some lesser issue in the near future (e.g., disk space low). The application can still continue.
+    *   `ERROR`: Due to a more serious problem, the software has not been able to perform some function. For example, an API call failed after retries, critical file not found, unhandled exception in a worker thread.
+    *   `CRITICAL`: A serious error, indicating that the program itself may be unable to continue running. (Use sparingly).
+
+5.  **Sensitive Information:** **Never** log sensitive information directly (e.g., API tokens, passwords) unless explicitly masked or if the log level is DEBUG and this is understood to be for development/diagnostic purposes only. `config.py` should be the sole source of such data.
+
+6.  **Performance:** While logging is crucial, avoid excessive logging in hot paths or tight loops that could significantly degrade performance. Use `DEBUG` level for such verbose logs.
+
+7.  **Log Output:** By default, logs should go to `stdout` or `stderr` to be compatible with containerized environments and log collection agents. File-based logging can be a configurable option in `config.py` if needed for specific scenarios.

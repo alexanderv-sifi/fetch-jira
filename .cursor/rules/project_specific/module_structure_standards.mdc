@@ -1,5 +1,84 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Defines standards for Python module structure, naming conventions, and overall project layout for the fetch-jira utility."
+globs: ["**/*.py", "*/"] # Applies to Python files and directory structure
+alwaysApply: true
+---
+
+# Module Structure and Project Layout Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Core Development Principles: Modularity and Separation of Concerns)
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.MD` (Section 1: "Code Restructuring and Modularization")
+**Referenced By:** `00_ai_assistant_directives.mdc`
+
+## 1. Core Module Structure:
+The `fetch-jira` utility will adhere to the following primary module structure, located within a `src/fetch_jira/` directory (or a similar top-level source directory if preferred, e.g., just `fetch_jira/` at the project root if not using `src/`):
+
+*   **`main.py`** (or `fetch_jira_cli.py`):
+    *   Handles command-line argument parsing (using `argparse`).
+    *   Orchestrates the overall fetching process.
+    *   Manages the `ThreadPoolExecutor` and main processing loop.
+    *   Serves as the primary entry point of the application.
+*   **`config.py`**:
+    *   Loads and manages configuration (e.g., from `.env` file, environment variables).
+    *   Stores global constants (e.g., API call delays, semaphore limits).
+    *   Refer to `module_specific_standards/config_standards.mdc` for detailed rules.
+*   **`jira_client.py`**:
+    *   Contains all low-level functions for direct interaction with the Jira API.
+    *   Refer to `api_clients/jira_client_standards.mdc` and `common/general_api_client_standards.mdc`.
+*   **`confluence_client.py`**:
+    *   Manages all interactions with the Confluence API.
+    *   Refer to `api_clients/confluence_client_standards.mdc` and `common/general_api_client_standards.mdc`.
+*   **`gdrive_client.py`**:
+    *   Handles all Google Drive API interactions.
+    *   Refer to `api_clients/gdrive_client_standards.mdc` and `common/general_api_client_standards.mdc`.
+*   **`data_processor.py`** (or `issue_enricher.py`):
+    *   Contains higher-level logic for processing and enriching Jira issues.
+    *   Orchestrates calls to client modules.
+    *   Refer to `module_specific_standards/data_processor_standards.mdc`.
+*   **`output_manager.py`**:
+    *   Handles saving the processed data.
+    *   Refer to `module_specific_standards/output_manager_standards.mdc`.
+*   **`utils.py`** (Optional):
+    *   For common, self-contained utility functions that don't fit neatly into other modules (e.g., specific date formatting, complex string manipulations). Avoid making this a dumping ground; utilities should be genuinely reusable and context-agnostic.
+*   **`models.py`** (or a `schemas/` sub-directory):
+    *   Contains Pydantic models for data structures, API request/response bodies if not co-located with their primary users (e.g. if shared across multiple modules).
+    *   Refer to `data_models/pydantic_model_standards.mdc`.
+
+## 2. Naming Conventions:
+*   **Modules and Packages (Directories):** Use `snake_case` (e.g., `jira_client.py`, `api_clients/`).
+*   **Python Files:** Use `snake_case` (e.g., `config.py`).
+
+## 3. Directory Structure:
+*   **Source Code:** Reside in `src/fetch_jira/` or a top-level `fetch_jira/` directory.
+*   **Tests:** Reside in a top-level `tests/` directory. The structure within `tests/` should mirror the source code directory structure (e.g., tests for `src/fetch_jira/jira_client.py` in `tests/unit/test_jira_client.py`). Refer to `common/testing_standards.mdc`.
+*   **Documentation:** Project-level documentation (e.g., this file, `README.md`) in appropriate locations. Consider a `docs/` directory for extensive user/developer guides if needed.
+*   **Scripts:** Utility scripts not part of the main application can be placed in a `scripts/` directory.
+
+## 4. Module Cohesion and Coupling:
+*   **Single Responsibility:** Each module should have a single, well-defined responsibility.
+*   **Minimize Coupling:** Aim for loose coupling between modules. Modules should interact through well-defined interfaces (function calls with clear signatures, Pydantic models for data exchange). Avoid deep dependencies or reaching into the internal implementation details of other modules.
+
+## 5. Circular Dependencies:
+*   Actively avoid circular import dependencies between modules. This often indicates a design issue where responsibilities might be poorly separated. Refactor to break cycles if they occur. Common solutions include:
+    *   Moving shared functionality to a new, lower-level module.
+    *   Using dependency injection.
+    *   Restructuring classes or functions.
+
+## 6. Public vs. Private Interfaces:
+*   Indicate internal/private functions, methods, or variables within a module by prefixing their names with a single underscore (e.g., `_internal_helper()`).
+*   External modules should only rely on the public interface of a module (names not starting with an underscore).
+
+## 7. `__init__.py` Files:
+*   Use `__init__.py` files to define the public API of a package if necessary. This can make imports cleaner for users of the package.
+*   For simple modules (single `.py` files not part of a larger package structure within the source), `__init__.py` might not be strictly needed unless the directory itself is intended to be an importable package.
+*   Empty `__init__.py` files can be used to mark a directory as a Python package.
+
+## 8. Adding New Modules:
+*   When adding new modules, ensure they fit within the established architecture and have a clear purpose.
+*   Create corresponding test files.
+*   Update relevant documentation or rule files if the new module introduces significant new patterns or responsibilities.

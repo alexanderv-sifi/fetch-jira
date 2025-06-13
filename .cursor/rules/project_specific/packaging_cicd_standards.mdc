@@ -1,5 +1,115 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Standards for packaging the application (e.g., using Docker) and setting up CI/CD pipelines."
+globs: ["Dockerfile", ".github/workflows/*.yml", ".gitlab-ci.yml", "Makefile", "scripts/ci/*"] # Files this rule applies to
+alwaysApply: true
+---
+
+# Packaging and CI/CD Standards
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (general principles for deployable and maintainable applications)
+**Project-Specific Implementation:** `PROJECT_DEVELOPMENT_PLAN.md`, Section 2.8: "Packaging and Deployment"
+**Referenced By:** `00_ai_assistant_directives.mdc`
+
+## 1. Containerization (Docker):
+*   The application **must** be containerizable using Docker for consistent development and deployment environments, as specified in `PROJECT_DEVELOPMENT_PLAN.md` (Section 2.8).
+*   A `Dockerfile` **must** be maintained in the project root.
+*   **Dockerfile Best Practices:**
+    *   **Base Image:** Use official and minimal Python base images (e.g., `python:3.X-slim-bookworm`). Specify a particular version tag, avoid `latest`.
+    *   **Multi-Stage Builds:** Recommended to keep the final image size small.
+        *   A `builder` stage can be used to install dependencies (especially if compilation is needed).
+        *   The final stage copies only necessary artifacts (application code, installed dependencies from the builder stage's virtual environment) onto a slim base image.
+    *   **Layer Caching:** Structure `Dockerfile` commands to optimize layer caching. Copy files that change less frequently (like `pyproject.toml`, `uv.lock`) and install dependencies before copying application code.
+        ```dockerfile
+        # Example: Builder Stage
+        FROM python:3.11-slim AS builder
+        WORKDIR /app
+        RUN pip install uv # Install uv if not using a base image with it
+        COPY pyproject.toml uv.lock ./
+        # Create a virtual environment and install dependencies
+        RUN uv venv .venv && . .venv/bin/activate && uv pip sync --no-cache --system-site-packages
+        
+        # Example: Final Stage
+        FROM python:3.11-slim
+        WORKDIR /app
+        # Copy the virtual environment from the builder stage
+        COPY --from=builder /app/.venv ./.venv 
+        # Copy application source code
+        COPY src/ ./src/ 
+        # Activate virtual environment and set entrypoint
+        ENV PATH="/app/.venv/bin:$PATH"
+        ENTRYPOINT ["python", "src/fetch_jira/main.py"] # Adjust path as needed
+        CMD ["--help"] # Default command
+        ```
+    *   **Non-Root User:** Run the application as a non-root user within the container for enhanced security.
+        ```dockerfile
+        # Add to Dockerfile (typically before ENTRYPOINT/CMD)
+        RUN useradd --create-home appuser
+        USER appuser
+        ```
+    *   **Entry Point & CMD:** Clearly define `ENTRYPOINT` and `CMD`. `ENTRYPOINT` should specify the main executable, and `CMD` can provide default arguments or actions (e.g., `--help`).
+    *   **Environment Variables:** Use `ENV` for non-sensitive default environment variables. Sensitive configurations should be passed at runtime.
+
+## 2. CI/CD Pipeline (e.g., GitHub Actions):
+*   The project **must** have a CI/CD pipeline defined (e.g., in `.github/workflows/main.yml`).
+*   **Key CI/CD Stages/Jobs:**
+    *   **Linting:** Code **must** pass linting checks using `Ruff` (configured via `pyproject.toml` or `.ruff.toml`).
+        ```yaml
+        # Example GitHub Actions Step
+        # - name: Lint with Ruff
+        #   run: ruff check .
+        ```
+    *   **Testing:** All tests (unit, integration) defined as per `common/testing_standards.mdc` **must** pass.
+        ```yaml
+        # Example GitHub Actions Step
+        # - name: Run tests with Pytest
+        #   run: pytest
+        ```
+    *   **Coverage Reporting:** Test coverage should be measured (e.g., using `pytest-cov`) and potentially reported (e.g., to Codecov or as a CI artifact).
+        ```yaml
+        # Example GitHub Actions Step
+        # - name: Generate coverage report
+        #   run: pytest --cov=src/fetch_jira --cov-report=xml
+        # - name: Upload coverage to Codecov
+        #   uses: codecov/codecov-action@v3
+        #   with:
+        #     file: ./coverage.xml
+        ```
+    *   **Building Docker Image:** The CI pipeline **should** build the Docker image on changes to relevant files (e.g., `Dockerfile`, source code).
+    *   **Publishing Docker Image (Optional for now):** If desired, publish the Docker image to a container registry (e.g., GHCR, Docker Hub) on tags or merges to the main branch.
+    *   **Security Scanning (Future Consideration):** Integrate automated security scans for dependencies (e.g., `pip-audit` run by `uv`) and static code analysis (e.g., CodeQL).
+
+## 3. Build Artifacts:
+*   The primary build artifact is the Docker image.
+*   Versioning of build artifacts (Docker images) should be consistent and ideally tied to Git tags (e.g., `v0.1.0`) or commit hashes for development builds.
+
+## 4. Environment Configuration in CI/CD:
+*   CI/CD pipelines **must** manage environment-specific configurations and secrets securely (e.g., using GitHub Actions secrets).
+*   The application **must** be able to pick up configuration from environment variables passed by the CI/CD system.
+
+## 5. Makefile or Scripted Tasks (Recommended):
+*   A `Makefile` or helper scripts (e.g., in a `scripts/` directory) **should** be used to automate common development and CI tasks, promoting consistency between local development and CI environments.
+    *   Examples: `make lint`, `make test`, `make coverage`, `make build-docker`, `make run-docker`, `make clean`, `make setup-env`.
+    ```makefile
+    # Example Makefile
+    # .PHONY: lint test coverage build-docker
+
+    # lint:
+    #     ruff check .
+    #
+    # test:
+    #     pytest
+    #
+    # coverage:
+    #     pytest --cov=src/fetch_jira
+    #
+    # build-docker:
+    #     docker build -t fetch-jira-app .
+    ```
+
+## 6. Entry Point for CI:
+*   The main application entry point (`main.py`) must be executable and configurable via command-line arguments and environment variables to facilitate testing and execution in CI/CD environments.

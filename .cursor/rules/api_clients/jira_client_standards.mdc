@@ -1,5 +1,36 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+---
+description: "Specific standards for the Jira API client module (jira_client.py)."
+globs: ["**/jira_client.py"]
+alwaysApply: true
+---
+
+# Jira API Client Standards
+
+**Purpose:** This document outlines specific standards for the `jira_client.py` module, supplementing the `common/general_api_client_standards.mdc`.
+
+**Supplements:** `.cursor/rules/common/general_api_client_standards.mdc`
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md`
+**Project-Specific Context:** `PROJECT_DEVELOPMENT_PLAN.MD`, Sections 1 (module breakdown for `jira_client.py`) and 2.2 (Error Handling & Retry Mechanisms).
+
+## Module Specifics:
+1.  **Module Name:** `jira_client.py`
+2.  **Core Functionality (as per `PROJECT_DEVELOPMENT_PLAN.MD`):**
+    *   `fetch_issue(issue_key: str, expand_fields: list[str] = None)`: Fetches a single Jira issue.
+    *   `search_jql(jql_query: str, expand_fields: list[str] = None, start_at: int = 0, max_results: int = 100)`: Searches Jira using JQL. Must handle pagination internally if more results exist than `max_results` by making subsequent calls, or ensure callers are aware of how to paginate.
+    *   `fetch_remote_links_for_issue(issue_key: str)`: Fetches remote links associated with a Jira issue.
+3.  **Specific Error Handling:**
+    *   Raise `JiraApiError` (custom exception) for general Jira API request failures (e.g., non-2xx responses not covered by rate limits or auth).
+    *   Raise `JiraRateLimitError` (custom exception, potentially subclass of `JiraApiError` or a common `RateLimitError`) for HTTP 429 responses from Jira.
+    *   Raise `JiraAuthenticationError` (custom exception) for HTTP 401/403 errors.
+    *   Raise `JiraIssueNotFoundError` (custom exception) for HTTP 404 errors when a specific issue is not found.
+4.  **Specific Logging Details:**
+    *   When calling `fetch_issue`, log `issue_key` at DEBUG/INFO level.
+    *   When calling `search_jql`, log the `jql_query` at DEBUG/INFO level. Ensure the JQL query itself does not contain overly sensitive data before logging; if it might, consider logging a sanitized version or only a hash.
+    *   Log relevant Jira-specific request IDs or error messages from Jira's response upon failure.
+5.  **Jira-Specific Configurations (from `config.py`):**
+    *   Ensure the client uses configurations such as `JIRA_BASE_URL`, `JIRA_API_USERNAME`, `JIRA_API_TOKEN` (or other auth mechanisms as defined), and `JIRA_SEMAPHORE_LIMIT` from `config.py`.
