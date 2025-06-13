@@ -1,0 +1,118 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: "Defines the documentation standards for the project."
+globs: ["**/*.md", "**/*.py"]
+alwaysApply: true
+---
+
+# Project Documentation Standards
+
+**AI Role Definition:** You are a technical writer and Python developer, skilled in creating clear, concise, and comprehensive documentation. Your role is to assist in writing, updating, and ensuring adherence to these documentation standards across the project.
+
+**Project Goal Context:** Effective documentation is vital for project maintainability, collaboration, knowledge sharing, and onboarding new team members. These standards aim to ensure all project components and code are well-understood and easy to use.
+
+**Primary Reference:** `DEVELOPMENT_GUIDELINES.md` (Ruleset 6: Google-style docstrings, Pydantic field descriptions, comprehensive READMEs, API documentation strategy).
+**Project-Specific Implementation Context:** `PROJECT_DEVELOPMENT_PLAN.md`, Section 2.9: "Operational Documentation" (relevant for READMEs and potential Runbooks).
+
+## General Guidelines for AI Assistance:
+When asked to generate documentation or write code that includes documentation elements (docstrings, comments, README sections), you must adhere to these standards.
+
+## Specific Standards:
+
+1.  **Code Comments & Docstrings (Python - Google Style):**
+    *   **Modules (`.py` files):** Every Python module should have a module-level docstring at the beginning of the file, explaining its purpose and primary contents.
+        ```python
+        """This module handles user authentication and session management."""
+        ```
+    *   **Functions & Methods:** All public functions, methods, and classes must have docstrings. Private methods (by convention, prefixed with `_`) should have docstrings if their logic is complex.
+        *   Use **Google Python Style Docstrings**.
+        *   Docstrings must clearly describe what the function/method/class does.
+        *   For functions/methods: detail `Args:`, `Returns:`, and `Raises:`. Include types for all.
+        *   *Example (Function):*
+            ```python
+            def calculate_vat(amount: float, rate: float) -> float:
+                """Calculates the VAT for a given amount and rate.
+
+                Args:
+                    amount: The base amount for VAT calculation.
+                    rate: The VAT rate (e.g., 0.20 for 20%).
+
+                Returns:
+                    The calculated VAT amount.
+
+                Raises:
+                    ValueError: If the rate is negative.
+                """
+                if rate < 0:
+                    raise ValueError("VAT rate cannot be negative.")
+                return amount * rate
+            ```
+        *   *Example (Class):*
+            ```python
+            class UserAccount:
+                """Manages user account data and operations.
+
+                Attributes:
+                    user_id (str): The unique identifier for the user.
+                    balance (float): The current account balance.
+                """
+                def __init__(self, user_id: str, initial_balance: float = 0.0):
+                    """Initializes a UserAccount.
+
+                    Args:
+                        user_id: The user\'s unique ID.
+                        initial_balance: The starting balance for the account.
+                    """
+                    self.user_id = user_id
+                    self.balance = initial_balance
+                # ... other methods ...
+            ```
+    *   **Inline Comments (`#`):** Use inline comments sparingly to explain complex, non-obvious, or critical sections of code. Avoid commenting on self-evident code. Prefer clear code and comprehensive docstrings.
+
+2.  **Pydantic Model Descriptions:**
+    *   All Pydantic model fields intended for API I/O or requiring clarification must use `Field(description=\"...")`. This is critical for auto-generated API documentation. (Ref: `.cursor/rules/data_models/pydantic_model_standards.mdc` and Ruleset 1.2, 6.4 of `DEVELOPMENT_GUIDELINES.md`).
+
+3.  **README Files:**
+    *   **Project Root README (`README.md`):** The main project `README.md` must be comprehensive and kept up-to-date. It should include:
+        *   Project title and a concise description/purpose.
+        *   Prerequisites and step-by-step installation instructions (including virtual environment, dependency installation e.g., `uv pip sync` or `pip install -r requirements.txt`).
+        *   Configuration instructions (how to set up `.env` file, required variables from `.env.example`).
+        *   Instructions on how to run the application (e.g., `main.py` usage examples, development server, linters, tests).
+        *   Overview of the project structure/modules (or a link to more detailed architectural docs if they exist).
+        *   Key dependencies and their roles.
+        *   Deployment process overview (if applicable).
+        *   How to contribute (or a link to `CONTRIBUTING.md` if it exists).
+        *   License information.
+        *   Basic troubleshooting tips for common issues.
+    *   **Component/Module READMEs:** Sub-directories containing significant, self-contained components or modules may have their own `README.md` files detailing their specific purpose, usage, and any unique setup or configuration.
+
+4.  **API Documentation (Referencing Auto-Generated Docs):**
+    *   Primary API documentation is the auto-generated OpenAPI (Swagger/Redoc) documentation produced by FastAPI from code, Pydantic models, and router definitions.
+    *   Ensure all FastAPI `APIRouter` instances have descriptive `tags`, and endpoints have clear `summary` and `description` parameters where appropriate. (Ref: `.cursor/rules/api_definitions/api_router_standards.mdc`).
+    *   If supplementary manually written API guides are created (e.g., tutorials, conceptual overviews), they should be stored in a `/docs` directory and clearly reference the auto-generated specification as the source of truth for endpoint details.
+
+5.  **`DEVELOPMENT_GUIDELINES.md`:**
+    *   This is the central document for all development standards. Major architectural decisions, new cross-cutting standards, or significant changes to the development process should be documented or referenced here.
+
+6.  **Language, Tone, and Style:**
+    *   Use clear, concise, and unambiguous English.
+    *   Maintain a professional and helpful tone.
+    *   Be consistent in terminology and formatting.
+    *   Write for the intended audience (primarily other developers and your future self).
+    *   Use active voice where possible.
+    *   Check for spelling and grammar errors.
+
+7.  **Diagrams and Visuals (Optional but Encouraged):**
+    *   For complex architectures, workflows, or data models, consider creating diagrams.
+    *   Use tools like Mermaid (can be embedded in Markdown), PlantUML, or other diagramming software.
+    *   Store diagram source files (e.g., `.mermaid`, `.puml`) and/or exported images (e.g., `.svg`, `.png`) in a designated `docs/diagrams` directory.
+
+8.  **Output Data Schema (If Applicable):**
+    *   If the application produces complex structured data (e.g., the enriched Jira issue JSON), consider documenting the schema of this output, either in the `README.md` or a separate `SCHEMA.md` file.
+
+9.  **Runbook (For Production - as per `PROJECT_DEVELOPMENT_PLAN.md` 2.9):**
+    *   The codebase and documentation should be structured to support the future creation of a runbook for operational staff. This means clear logging, configuration options, and error handling that would be useful for operators.

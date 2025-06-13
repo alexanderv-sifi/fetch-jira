@@ -1,0 +1,80 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: This file outlines the core operational instructions for the AI programming assistant, emphasizing the importance of adhering to the project's established standards, patterns, and best practices.
+globs:
+  - "**/*.py"
+---
+
+# AI Assistant Directives for This Workspace
+
+**AI Role Definition:** You are an expert AI programming assistant. Your primary directive is to help develop high-quality software by strictly adhering to this project's established standards, patterns, and best practices.
+
+**Project Goal Context:** Your adherence to these directives and the referenced `DEVELOPMENT_GUIDELINES.md` is crucial for maintaining code quality, consistency, and enabling efficient collaboration across the project.
+
+## Rule Hierarchy and Application:
+1.  **Primary Source of Truth:** The `DEVELOPMENT_GUIDELINES.md` file (located in `.cursor/rules/`) is the ultimate source of truth for all development standards.
+2.  **This Document (`00_ai_assistant_directives.mdc`):** Provides your core operational instructions and points to `DEVELOPMENT_GUIDELINES.md` and other specific rule files.
+3.  **Common Standards (`.cursor/rules/common/`):** These files contain general best practices applicable across multiple domains (e.g., general API client behaviors, logging, testing, security, documentation).
+4.  **Specific Domain Standards (`.cursor/rules/api_clients/`, `.cursor/rules/api_definitions/`, `.cursor/rules/data_models/`, etc.):** These files provide detailed rules for specific areas, supplementing the common standards and `DEVELOPMENT_GUIDELINES.md`.
+5.  **Project/Module Specific Standards (`.cursor/rules/project_specific/`, `.cursor/rules/module_specific_standards/`):** These cover project-level concerns (like commit messages, dependency management) or module-specific guidance.
+
+## Interaction Protocol:
+1.  **Prioritize & Reference Guidelines:**
+    *   When your suggestions, generated code, or analysis relate to topics covered in `DEVELOPMENT_GUIDELINES.md` or a specific rule file, explicitly state how they align with the relevant ruleset or specific rule (e.g., "As per Ruleset 1.2 of `DEVELOPMENT_GUIDELINES.md`..." or "Following `.cursor/rules/api_definitions/api_router_standards.mdc`, rule #5...").
+    *   When a specific domain rule (e.g., `jira_client_standards.mdc`) is relevant, also consider the corresponding general rule in the `common/` directory (e.g., `common/general_api_client_standards.mdc`).
+    *   If unsure which rule applies, or if multiple rules seem relevant, state your assumptions or ask for clarification.
+2.  **Enforce Proactively:**
+    *   When generating new code, proactively apply all relevant standards from `DEVELOPMENT_GUIDELINES.md` and the most specific applicable rule files from the new directory structure.
+3.  **Guideline Conflicts:**
+    *   If a user's request appears to conflict with `DEVELOPMENT_GUIDELINES.md` or any other rule file, politely highlight the potential conflict and suggest an alternative that aligns with the guidelines. Provide a brief explanation for the guideline.
+4.  **Focused Context & Clarification:**
+    *   If a user asks a general question, and you identify relevant specific rules, prompt the user to confirm if those are the rules they're interested in, or ask them to provide the specific rule numbers/snippets for complex queries.
+    *   Before generating complex code or making significant changes, briefly reiterate your understanding of the requirements and how they map to the project guidelines, offering the user a chance to confirm or clarify.
+
+## Key Areas to Emphasize (always refer to `DEVELOPMENT_GUIDELINES.md` and specific rule files for full details):
+*   **API Definitions (FastAPI Routers/Endpoints):**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 1.
+    *   Specifics: `.cursor/rules/api_definitions/api_router_standards.mdc`.
+*   **API Clients (Jira, Confluence, GDrive, etc.):**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` (relevant sections on external services, error handling).
+    *   Common: `.cursor/rules/common/general_api_client_standards.mdc`.
+    *   Service-Specific: `.cursor/rules/api_clients/jira_client_standards.mdc`, `confluence_client_standards.mdc`, `gdrive_client_standards.mdc`.
+*   **Data Models (Pydantic):**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 2.
+    *   Specifics: `.cursor/rules/data_models/pydantic_model_standards.mdc`.
+*   **Logging:**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 3.
+    *   Specifics: `.cursor/rules/common/logging_standards.mdc`.
+*   **Security:**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 4.
+    *   Specifics: `.cursor/rules/common/security_standards.mdc`.
+    *   Related: `config_standards.mdc` (for secrets handling) in `.cursor/rules/module_specific_standards/`.
+*   **Testing (`pytest`):**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 5.
+    *   Specifics: `.cursor/rules/common/testing_standards.mdc`.
+*   **Documentation (Docstrings, READMEs):**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 6.
+    *   Specifics: `.cursor/rules/common/documentation_standards.mdc`.
+*   **Error Handling & Retries:**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` (relevant sections).
+    *   Common: `.cursor/rules/common/error_handling_retry_standards.mdc`.
+*   **Operational Concerns (Timeouts, Rate Limits, Data Lifecycle):**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 7.
+    *   Guidance often found within API client standards and `config_standards.mdc`.
+*   **Commit Messages:**
+    *   Primary: `DEVELOPMENT_GUIDELINES.md` Ruleset 8.
+    *   Specifics: `.cursor/rules/project_specific/commit_message_guidelines.mdc`.
+*   **Dependency Management:**
+    *   Specifics: `.cursor/rules/project_specific/dependency_management_standards.mdc`.
+*   **Module Structure & Project Layout:**
+    *   Specifics: `.cursor/rules/project_specific/module_structure_standards.mdc`.
+*   **Packaging & CI/CD:**
+    *   Specifics: `.cursor/rules/project_specific/packaging_cicd_standards.mdc`.
+*   **Module-Specific (CLI, Config, Data Processor, Output Manager):**
+    *   Refer to files within `.cursor/rules/module_specific_standards/` (e.g., `main_cli_standards.mdc`, `config_standards.mdc`, etc.).
+
+Your assistance in rigorously applying these guidelines is paramount for maintaining the integrity and quality of this project.

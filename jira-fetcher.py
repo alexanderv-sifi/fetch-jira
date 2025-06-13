@@ -104,64 +104,80 @@ def process_issue_fully(issue_json, indent_str="", skip_remote=False):
     logging.info(f"{indent_str}Processing details for issue: {issue_key} - {issue_json.get('fields', {}).get('summary', 'N/A')}")
 
     # Fetch and process remote links
-    if issue_key not in globally_processed_issue_keys or not skip_remote: # Only process if new or if not skipping remote
+    # Check if remote links are already expanded in the issue_json
+    expanded_remote_links = issue_json.get('fields', {}).get('remotelink')
+
+    if expanded_remote_links:
+        logging.info(f"{indent_str}  Using {len(expanded_remote_links)} expanded remote link(s) for {issue_key}.")
+        # The structure of expanded remote links might be directly usable or need slight adaptation.
+        # Assuming it's a list of objects similar to what fetch_remote_links returns.
+        remote_links = expanded_remote_links 
+        # Ensure it's stored in the same way for downstream processing if it was fetched separately
+        if "remote_links_data" not in issue_json: 
+            issue_json["remote_links_data"] = remote_links
+    elif issue_key not in globally_processed_issue_keys or not skip_remote: # Only process if new or if not skipping remote, and not expanded
+        logging.info(f"{indent_str}  Expanded remote links not found for {issue_key}. Fetching separately.")
         remote_links = fetch_remote_links(issue_key)
         if remote_links:
             issue_json["remote_links_data"] = remote_links
-            logging.info(f"{indent_str}  Found {len(remote_links)} remote link(s) for {issue_key}.")
-            for idx, r_link in enumerate(remote_links):
-                link_obj = r_link.get('object', {})
-                if not isinstance(link_obj, dict):
-                    logging.warning(f"{indent_str}    Skipping malformed remote link object: {link_obj}")
-                    continue
-                link_title = link_obj.get('title', 'N/A')
-                link_url = link_obj.get('url', 'N/A')
-                logging.info(f"{indent_str}    - Link {idx+1}: {link_title} ({link_url})")
+    else:
+        remote_links = issue_json.get("remote_links_data", []) # Get already fetched if any
 
-                if skip_remote:
-                    logging.debug(f"{indent_str}      Skipping remote content fetch for {link_url} due to --skip-remote-content flag.")
-                    if isinstance(issue_json["remote_links_data"][idx], dict):
-                         issue_json["remote_links_data"][idx]["content_skipped"] = True
-                    continue
+    if remote_links:
+        logging.info(f"{indent_str}  Processing {len(remote_links)} remote link(s) for {issue_key}.")
+        for idx, r_link in enumerate(remote_links):
+            link_obj = r_link.get('object', {})
+            if not isinstance(link_obj, dict):
+                logging.warning(f"{indent_str}    Skipping malformed remote link object: {link_obj}")
+                continue
+            link_title = link_obj.get('title', 'N/A')
+            link_url = link_obj.get('url', 'N/A')
+            logging.info(f"{indent_str}    - Link {idx+1}: {link_title} ({link_url})")
 
-                # Confluence
-                if "simplifi.atlassian.net/wiki/spaces/" in link_url or "/wiki/pages/" in link_url:
-                    page_id = None
-                    if "?pageId=" in link_url:
-                        try: page_id = link_url.split('?pageId=')[1].split('&')[0]
-                        except IndexError: logging.warning(f"{indent_str}      Could not parse pageId from URL: {link_url}")
-                    elif "/pages/" in link_url:
-                        parts = link_url.split('/pages/')
-                        if len(parts) > 1:
-                            page_id_part = parts[1].split('/')[0]
-                            if page_id_part.isdigit(): page_id = page_id_part
-                            else: logging.warning(f"{indent_str}      Non-numeric page ID segment: {page_id_part} in URL: {link_url}")
-                        else: logging.warning(f"{indent_str}      Could not parse pageId from Confluence URL structure: {link_url}")
-                    
-                    if page_id:
-                        logging.info(f"{indent_str}      Fetching Confluence content for page ID: {page_id}...")
-                        confluence_content = fetch_all_confluence_content_recursive(page_id)
-                        if confluence_content and isinstance(issue_json["remote_links_data"][idx], dict):
-                            issue_json["remote_links_data"][idx]["confluence_content_fetched"] = confluence_content
-                            logging.info(f"{indent_str}      Successfully attached Confluence content for page ID: {page_id}")
-                        elif not confluence_content:
-                             logging.info(f"{indent_str}      No Confluence content found or error for page ID: {page_id}")
-                    else: logging.warning(f"{indent_str}      Could not determine Confluence page ID from URL: {link_url}")
-                # Google Drive
-                elif GOOGLE_LIBS_AVAILABLE and is_google_drive_link(link_url):
-                    gdrive_service = get_google_drive_service()
-                    if gdrive_service:
-                        gdrive_id = extract_google_drive_id(link_url)
-                        if gdrive_id:
-                            logging.info(f"{indent_str}      Fetching Google Drive item for ID: {gdrive_id} (from URL: {link_url})...")
-                            gdrive_content = fetch_google_drive_item_recursive(gdrive_service, gdrive_id, visited_ids=set())
-                            if gdrive_content and isinstance(issue_json["remote_links_data"][idx], dict):
-                                issue_json["remote_links_data"][idx]["gdrive_content_fetched"] = gdrive_content
-                                logging.info(f"{indent_str}      Successfully processed Google Drive link for ID: {gdrive_id}")
-                            elif not gdrive_content:
-                                logging.info(f"{indent_str}      No Google Drive content found or error for ID: {gdrive_id}")
-                        else: logging.warning(f"{indent_str}      Could not extract Google Drive ID from URL: {link_url}")
-                    else: logging.warning(f"{indent_str}      Google Drive service not available, skipping GDrive link: {link_url}")
+            if skip_remote:
+                logging.debug(f"{indent_str}      Skipping remote content fetch for {link_url} due to --skip-remote-content flag.")
+                if isinstance(issue_json.get("remote_links_data"), list) and idx < len(issue_json["remote_links_data"]) and isinstance(issue_json["remote_links_data"][idx], dict):
+                    issue_json["remote_links_data"][idx]["content_skipped"] = True
+                continue
+
+            # Confluence
+            if "simplifi.atlassian.net/wiki/spaces/" in link_url or "/wiki/pages/" in link_url:
+                page_id = None
+                if "?pageId=" in link_url:
+                    try: page_id = link_url.split('?pageId=')[1].split('&')[0]
+                    except IndexError: logging.warning(f"{indent_str}      Could not parse pageId from URL: {link_url}")
+                elif "/pages/" in link_url:
+                    parts = link_url.split('/pages/')
+                    if len(parts) > 1:
+                        page_id_part = parts[1].split('/')[0]
+                        if page_id_part.isdigit(): page_id = page_id_part
+                        else: logging.warning(f"{indent_str}      Non-numeric page ID segment: {page_id_part} in URL: {link_url}")
+                    else: logging.warning(f"{indent_str}      Could not parse pageId from Confluence URL structure: {link_url}")
+                
+                if page_id:
+                    logging.info(f"{indent_str}      Fetching Confluence content for page ID: {page_id}...")
+                    confluence_content = fetch_all_confluence_content_recursive(page_id)
+                    if confluence_content and isinstance(issue_json["remote_links_data"][idx], dict):
+                        issue_json["remote_links_data"][idx]["confluence_content_fetched"] = confluence_content
+                        logging.info(f"{indent_str}      Successfully attached Confluence content for page ID: {page_id}")
+                    elif not confluence_content:
+                         logging.info(f"{indent_str}      No Confluence content found or error for page ID: {page_id}")
+                else: logging.warning(f"{indent_str}      Could not determine Confluence page ID from URL: {link_url}")
+            # Google Drive
+            elif GOOGLE_LIBS_AVAILABLE and is_google_drive_link(link_url):
+                gdrive_service = get_google_drive_service()
+                if gdrive_service:
+                    gdrive_id = extract_google_drive_id(link_url)
+                    if gdrive_id:
+                        logging.info(f"{indent_str}      Fetching Google Drive item for ID: {gdrive_id} (from URL: {link_url})...")
+                        gdrive_content = fetch_google_drive_item_recursive(gdrive_service, gdrive_id, visited_ids=set())
+                        if gdrive_content and isinstance(issue_json["remote_links_data"][idx], dict):
+                            issue_json["remote_links_data"][idx]["gdrive_content_fetched"] = gdrive_content
+                            logging.info(f"{indent_str}      Successfully processed Google Drive link for ID: {gdrive_id}")
+                        elif not gdrive_content:
+                            logging.info(f"{indent_str}      No Google Drive content found or error for ID: {gdrive_id}")
+                    else: logging.warning(f"{indent_str}      Could not extract Google Drive ID from URL: {link_url}")
+                else: logging.warning(f"{indent_str}      Google Drive service not available, skipping GDrive link: {link_url}")
     
     # If this issue is an Epic, fetch its children (summaries)
     # This should only happen once per epic due to globally_processed_issue_keys check.
@@ -410,12 +426,13 @@ def fetch_jira_issue(issue_key):
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}"
     auth = HTTPBasicAuth(USERNAME, API_TOKEN)
     headers = {"Accept": "application/json"}
-    
-    logging.debug(f"Fetching Jira issue: {url}")
+    params = {'expand': 'remotelink'}
+
+    logging.debug(f"Fetching Jira issue: {url} with expand=remotelink")
     JIRA_SEMAPHORE.acquire()
     try:
-        time.sleep(API_CALL_DELAY_SECONDS) 
-        response = requests.get(url, headers=headers, auth=auth)
+        time.sleep(API_CALL_DELAY_SECONDS)
+        response = requests.get(url, headers=headers, auth=auth, params=params)
         response.raise_for_status() # Raise an exception for bad status codes
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -426,48 +443,59 @@ def fetch_jira_issue(issue_key):
     finally:
         JIRA_SEMAPHORE.release()
 
-def fetch_subtasks(parent_issue_key):
-    """Fetch all subtasks for a parent issue"""
-    # First get the parent issue to find subtasks
-    parent = fetch_jira_issue(parent_issue_key)
-    
-    if not parent:
+def fetch_subtasks(parent_issue_json):
+    """Fetch all subtasks for a parent issue using a batch JQL query."""
+    if not parent_issue_json or 'fields' not in parent_issue_json or 'subtasks' not in parent_issue_json['fields']:
+        logging.debug(f"No subtasks field found or parent_issue_json invalid for {parent_issue_json.get('key', 'Unknown Key')}.")
         return []
-    
-    subtasks = []
-    
-    # Get direct subtasks
-    if 'subtasks' in parent['fields'] and parent['fields']['subtasks']:
-        for subtask in parent['fields']['subtasks']:
-            subtask_data = fetch_jira_issue(subtask['key'])
-            if subtask_data:
-                subtasks.append(subtask_data)
-    
-    return subtasks
 
-def fetch_linked_issues(issue_key):
-    """Fetch issues linked to the given issue"""
-    issue = fetch_jira_issue(issue_key)
-    
-    if not issue:
+    subtask_keys = []
+    for subtask_summary in parent_issue_json['fields']['subtasks']:
+        if subtask_summary and 'key' in subtask_summary:
+            subtask_keys.append(subtask_summary['key'])
+
+    if not subtask_keys:
+        logging.info(f"No subtask keys found for issue {parent_issue_json.get('key', 'Unknown Key')}.")
         return []
+
+    # Construct JQL to fetch all subtasks by their keys in one go
+    # Ensure keys are quoted if they contain special characters, though Jira keys typically don't.
+    # However, JQL functions sometimes expect quotes for values.
+    # For issueKey in (), keys do not need to be quoted.
+    jql_subtask_keys = ", ".join(subtask_keys)
+    jql = f'issueKey in ({jql_subtask_keys}) ORDER BY created DESC' # Add ordering for consistency
     
-    linked_issues = []
+    logging.info(f"Fetching details for {len(subtask_keys)} subtasks of {parent_issue_json.get('key')} using JQL: {jql[:100]}...")
+    # search_jira_with_jql already handles pagination and semaphore
+    # It will also expand remote links for these subtasks due to previous changes.
+    detailed_subtasks = search_jira_with_jql(jql, context_log_prefix=f"  Subtasks for {parent_issue_json.get('key')} - ")
     
-    if 'issuelinks' in issue['fields'] and issue['fields']['issuelinks']:
-        for link in issue['fields']['issuelinks']:
-            # Check both inward and outward links
-            if 'inwardIssue' in link:
-                linked_issue_data = fetch_jira_issue(link['inwardIssue']['key'])
-                if linked_issue_data:
-                    linked_issues.append(linked_issue_data)
-            
-            if 'outwardIssue' in link:
-                linked_issue_data = fetch_jira_issue(link['outwardIssue']['key'])
-                if linked_issue_data:
-                    linked_issues.append(linked_issue_data)
+    return detailed_subtasks
+
+def fetch_linked_issues(parent_issue_json):
+    """Fetch issues linked to the given issue using a batch JQL query."""
+    if not parent_issue_json or 'fields' not in parent_issue_json or 'issuelinks' not in parent_issue_json['fields']:
+        logging.debug(f"No issuelinks field found or parent_issue_json invalid for {parent_issue_json.get('key', 'Unknown Key')}.")
+        return []
+
+    linked_issue_keys = set() # Use a set to avoid duplicate keys if linked multiple ways
+    for link in parent_issue_json['fields']['issuelinks']:
+        if 'inwardIssue' in link and 'key' in link['inwardIssue']:
+            linked_issue_keys.add(link['inwardIssue']['key'])
+        if 'outwardIssue' in link and 'key' in link['outwardIssue']:
+            linked_issue_keys.add(link['outwardIssue']['key'])
+
+    if not linked_issue_keys:
+        logging.info(f"No linked issue keys found for issue {parent_issue_json.get('key', 'Unknown Key')}.")
+        return []
+
+    jql_linked_keys = ", ".join(list(linked_issue_keys))
+    jql = f'issueKey in ({jql_linked_keys}) ORDER BY created DESC'
     
-    return linked_issues
+    logging.info(f"Fetching details for {len(linked_issue_keys)} linked issues of {parent_issue_json.get('key')} using JQL: {jql[:100]}...")
+    detailed_linked_issues = search_jira_with_jql(jql, context_log_prefix=f"  Linked to {parent_issue_json.get('key')} - ")
+    
+    return detailed_linked_issues
 
 def search_jira_with_jql(jql_query, context_log_prefix="  "):
     """ Helper function to search Jira with JQL, handling pagination and semaphore """
@@ -482,9 +510,10 @@ def search_jira_with_jql(jql_query, context_log_prefix="  "):
             'jql': jql_query,
             'startAt': start_at,
             'maxResults': MAX_RESULTS_PER_JIRA_PAGE,
-            'fields': '*all'
+            'fields': '*all',
+            'expand': 'remotelink'
         }
-        logging.info(f"{context_log_prefix}Fetching JQL page: startAt={start_at}, maxResults={MAX_RESULTS_PER_JIRA_PAGE} for JQL: {jql_query[:50]}...")
+        logging.info(f"{context_log_prefix}Fetching JQL page: startAt={start_at}, maxResults={MAX_RESULTS_PER_JIRA_PAGE} for JQL: {jql_query[:50]}... (expanding remotelink)")
         JIRA_SEMAPHORE.acquire()
         try:
             time.sleep(API_CALL_DELAY_SECONDS)
@@ -700,7 +729,7 @@ def worker_process_issue(issue_obj_raw, skip_remote, issues_processing_queue, ma
         related_to_queue = [] 
 
         # 1. Subtasks (fetch_subtasks returns full issue JSONs)
-        subtask_summaries = fetch_subtasks(current_issue_key)
+        subtask_summaries = fetch_subtasks(issue_obj_raw)
         if subtask_summaries:
             with map_and_queue_lock:
                 if "subtasks_data" not in master_issues_map[current_issue_key]: 
@@ -716,7 +745,7 @@ def worker_process_issue(issue_obj_raw, skip_remote, issues_processing_queue, ma
                             logging.info(f"Worker ({current_issue_key}): Queued subtask {sub_key}")
         
         # 2. Linked Issues (fetch_linked_issues returns full issue JSONs)
-        linked_issues_summaries = fetch_linked_issues(current_issue_key)
+        linked_issues_summaries = fetch_linked_issues(issue_obj_raw)
         if linked_issues_summaries:
             with map_and_queue_lock:
                 if "linked_issues_data" not in master_issues_map[current_issue_key]: 
