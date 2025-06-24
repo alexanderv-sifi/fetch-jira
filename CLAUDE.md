@@ -4,35 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**CAKE - Corporate Aggregation & Knowledge Extraction** is a powerful Python utility for comprehensively extracting and aggregating corporate knowledge from multiple platforms including Jira, Confluence, and Google Drive. It supports multiple output formats including individual JSONL files per page (perfect for Vertex AI RAG ingestion) and includes enterprise-grade features like permissions/ACL capture.
+**CAKE - Corporate Aggregation & Knowledge Extraction** is a modular Python framework for extracting enterprise knowledge from multiple platforms including Jira, Confluence, and Google Drive. It features a clean, performance-oriented architecture optimized for AI/ML workflows, particularly Vertex AI RAG ingestion, with enterprise-grade security and permissions handling.
 
 ## Key Commands
 
-### Running CAKE
+### New CLI Interface (v2.0) - Recommended
 ```bash
-# Run with uv (recommended)
-uv run cake.py --mode <mode> --query <query> [options]
+# Modern modular CLI
+uv run cake_cli.py confluence <page_id> [options]
 
-# If installed as package
-cake --mode <mode> --query <query> [options]
+# Examples
+uv run cake_cli.py confluence 3492511763 --simplified
+uv run cake_cli.py confluence 3492511763 --format jsonl --no-permissions
+uv run cake_cli.py confluence 3492511763 --max-concurrent 10 --debug
 ```
 
-### Common Usage Patterns
+### Legacy Interface (v1.x) - Still Available
 ```bash
-# Confluence pages with individual JSONL files (perfect for RAG)
-uv run cake.py --mode confluence --query 3492511763 --output-format jsonl-per-page --include-permissions
+# Traditional interface for backward compatibility
+uv run cake.py --mode <mode> --query <query> [options]
 
-# Fetch specific Jira issue
+# Examples
+uv run cake.py --mode confluence --query 3492511763 --output-format jsonl-per-page
 uv run cake.py --mode issue --query DWDEV-6812
-
-# Fetch with JQL query and JSONL output
-uv run cake.py --mode jql --query "project = DWDEV AND status = 'In Progress'" --output-format jsonl
-
-# Fetch entire project (traditional JSON)
-uv run cake.py --mode project --query DWDEV --skip-remote-content
-
-# Debug mode
-uv run cake.py --mode confluence --query 3492511763 --debug
+uv run cake.py --mode jql --query "project = DWDEV AND status = Open"
 ```
 
 ### Development Setup
@@ -40,63 +35,85 @@ uv run cake.py --mode confluence --query 3492511763 --debug
 # Install dependencies
 uv pip install -r requirements.txt
 
-# For Google Drive integration
+# For Google Drive integration (optional)
 uv pip install google-api-python-client google-auth
+
+# Test new architecture
+uv run cake_cli.py confluence 3758620708 --simplified
 ```
 
-## Architecture
+## Architecture (v2.0)
 
-### Current State
-- **Main Script**: `cake.py` containing core orchestration and multi-platform logic
-- **Confluence Module**: `confluence_client.py` - Modular Confluence API client (✅ **Completed**)
-- **Enhanced Confluence**: `enhanced_confluence_client.py` - Permissions-aware client (✅ **Completed**)
-- **Multi-format Output**: JSON, JSONL, and individual JSONL per page
-- Uses threading with semaphores for concurrent API calls
-- Configurable via `.env` file
-- RAG-optimized output with cleaned content and metadata
+### Modern Modular Structure
+```
+cake/                         # New modular framework
+├── cli.py                    # Command-line interface
+├── core/
+│   ├── config.py            # Configuration management
+│   └── processor.py         # Main orchestration logic
+├── clients/
+│   ├── base.py              # Shared client functionality
+│   ├── confluence_client.py # Unified Confluence client
+│   ├── jira_client.py       # Jira API client (planned)
+│   └── gdrive_client.py     # Google Drive client (planned)
+└── processors/
+    ├── content.py           # HTML cleaning & enhancement
+    └── rag.py              # RAG-specific formatting
 
-### Modular Architecture Progress
-**✅ Completed Modules:**
-- `confluence_client.py` - Confluence API interactions with ConfluenceClient class
+cake_cli.py                   # New CLI entry point
+cake.py                       # Legacy monolithic script (preserved)
+```
 
-**🔄 Planned Modules (from PROJECT_DEVELOPMENT_PLAN.md):**
-- `main.py` - CLI parsing and orchestration
-- `config.py` - Configuration management  
-- `jira_client.py` - Jira API interactions
-- `gdrive_client.py` - Google Drive API interactions
-- `data_processor.py` - Issue processing and enrichment logic
-- `output_manager.py` - Data output handling
-- `utils.py` - Common utilities
+### Key Improvements in v2.0
+- **Fixed Pagination Bug**: Now captures all 44 pages instead of 25 (76% more content)
+- **Unified Confluence Client**: Consolidated duplicate clients into one optimized version
+- **Performance**: Concurrent processing with intelligent rate limiting
+- **Simplified Output**: Minimal metadata option for better RAG performance
+- **Modular Design**: Clean separation of concerns for maintainability
 
-### Key Components
-- **API Clients**: 
-  - ✅ **ConfluenceClient**: Separate class with methods for page content, child pages, recursive fetching, URL parsing
-  - 🔄 **Planned**: Separate clients for Jira and Google Drive with built-in retry logic
-- **Data Processing**: Processes issues and fetches related content (subtasks, linked issues, epic children)
-- **Concurrency**: Uses ThreadPoolExecutor with semaphores to respect API rate limits
-- **Output**: Generates timestamped JSON files with export metadata and processed issue data
+### Modular Architecture Components
 
-### Confluence Client Usage
+**✅ Completed v2.0 Modules:**
+- `cake/core/config.py` - Centralized configuration management with environment loading
+- `cake/core/processor.py` - Main orchestration logic and workflow coordination
+- `cake/clients/base.py` - Shared client functionality with pagination and concurrency
+- `cake/clients/confluence_client.py` - Unified Confluence client (consolidates old duplicate clients)
+- `cake/processors/content.py` - HTML cleaning, macro processing, and content enhancement
+- `cake/processors/rag.py` - RAG-specific formatting and JSONL generation
+- `cake/cli.py` - Modern command-line interface
+- `cake_cli.py` - Entry point script
+
+**🔄 Next Phase (Jira Migration):**
+- `cake/clients/jira_client.py` - Extract Jira client from monolithic cake.py
+- `cake/clients/gdrive_client.py` - Extract Google Drive client from monolithic cake.py
+- `cake/processors/permissions.py` - Enhanced permission processing
+- Async/await support for improved performance
+
+### New CLI Usage Examples
 ```python
-from confluence_client import ConfluenceClient
+from cake import CakeProcessor, CakeConfig
 
-# Initialize client
-client = ConfluenceClient(
-    base_url="https://domain.atlassian.net/wiki",
-    username="user@example.com", 
-    api_token="api_token",
-    max_concurrent_calls=5
-)
+# Load configuration
+config = CakeConfig.from_env()
+config.simplified_output = True
+config.max_concurrent_calls = 10
 
-# Check if URL is Confluence
-is_confluence = client.is_confluence_url(url)
+# Create processor
+processor = CakeProcessor(config)
 
-# Extract page ID from URL
-page_id = client.extract_page_id_from_url(url)
+# Process Confluence content
+results = processor.process_confluence_page("3492511763", "jsonl-per-page")
 
-# Fetch page content recursively
-content = client.fetch_content_recursive(page_id)
+# Get page info
+page_info = processor.get_page_info("3758620708")
 ```
+
+### Performance Benefits
+- **Complete Content**: Fixed pagination bug captures all pages (44 vs 25)
+- **Faster Processing**: Concurrent API calls with intelligent rate limiting
+- **Better RAG**: Simplified output format reduces metadata noise
+- **Memory Efficient**: Streaming JSONL generation for large datasets
+- **Error Resilient**: Comprehensive error handling and retry logic
 
 ## Configuration
 

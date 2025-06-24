@@ -3,16 +3,47 @@ cake = { path = ".", editable = true }
 
 [project]
 name = "cake"
-version = "0.1.0"
-description = "CAKE - Corporate Aggregation & Knowledge Extraction. Extract content from Jira, Confluence, and Google Drive with permissions for RAG ingestion."
+version = "2.0.0"
+description = "CAKE - Corporate Aggregation & Knowledge Extraction. Modular framework for extracting enterprise knowledge from Jira, Confluence, and Google Drive with AI/ML optimization and permissions handling."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "requests>=2.32.3",
     "google-api-python-client",
-    "google-auth",
+    "google-auth", 
     "python-dotenv"
 ]
+authors = [
+    {name = "Digital Workplace Solutions", email = "digitalworkplace@simpli.fi"}
+]
+keywords = ["enterprise", "knowledge-extraction", "rag", "confluence", "jira", "ai-ml"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: General",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/alexanderv-sifi/cake"
+"Repository" = "https://github.com/alexanderv-sifi/cake"
+"Documentation" = "https://github.com/alexanderv-sifi/cake/blob/main/README.md"
 
 [project.scripts]
-cake = "cake:main"
+cake = "cake.cli:main"
+cake-cli = "cake.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "flake8>=5.0",
+    "mypy>=1.0"
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py312']
