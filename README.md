@@ -148,6 +148,14 @@ Ensure Python 3.12+ and `uv` are installed.
     uv run jira-fetcher.py --mode issue --query YOUR-ISSUE-KEY
     ```
 
+### Architecture Notes
+
+The project is being modularized for better maintainability:
+- **✅ `confluence_client.py`**: Standalone Confluence API client (completed)
+- **🔄 Planned**: Separate modules for Jira client, Google Drive client, data processing, and configuration management
+
+See `PROJECT_DEVELOPMENT_PLAN.md` for detailed modularization roadmap.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue.

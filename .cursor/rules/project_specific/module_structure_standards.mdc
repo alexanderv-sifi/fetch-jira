@@ -16,7 +16,18 @@ alwaysApply: true
 **Referenced By:** `00_ai_assistant_directives.mdc`
 
 ## 1. Core Module Structure:
-The `fetch-jira` utility will adhere to the following primary module structure, located within a `src/fetch_jira/` directory (or a similar top-level source directory if preferred, e.g., just `fetch_jira/` at the project root if not using `src/`):
+The `fetch-jira` utility is being modularized following this structure, with modules located at the project root level (current implementation) or potentially moved to a `src/fetch_jira/` directory in the future:
+
+**✅ IMPLEMENTED MODULES:**
+
+*   **`confluence_client.py`**: ✅ **COMPLETED**
+    *   **ConfluenceClient class** managing all Confluence API interactions
+    *   **Methods**: `fetch_page_content()`, `fetch_child_pages()`, `fetch_content_recursive()`
+    *   **Utilities**: `is_confluence_url()`, `extract_page_id_from_url()`
+    *   **Features**: Proper error handling, type hints, semaphore management
+    *   Refer to `api_clients/confluence_client_standards.mdc` and `common/general_api_client_standards.mdc`
+
+**🔄 PLANNED MODULES:**
 
 *   **`main.py`** (or `fetch_jira_cli.py`):
     *   Handles command-line argument parsing (using `argparse`).
@@ -30,9 +41,6 @@ The `fetch-jira` utility will adhere to the following primary module structure, 
 *   **`jira_client.py`**:
     *   Contains all low-level functions for direct interaction with the Jira API.
     *   Refer to `api_clients/jira_client_standards.mdc` and `common/general_api_client_standards.mdc`.
-*   **`confluence_client.py`**:
-    *   Manages all interactions with the Confluence API.
-    *   Refer to `api_clients/confluence_client_standards.mdc` and `common/general_api_client_standards.mdc`.
 *   **`gdrive_client.py`**:
     *   Handles all Google Drive API interactions.
     *   Refer to `api_clients/gdrive_client_standards.mdc` and `common/general_api_client_standards.mdc`.

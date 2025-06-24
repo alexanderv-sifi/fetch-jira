@@ -17,6 +17,7 @@ import time # For basic delays
 import threading # For Semaphores
 import queue # For thread-safe queue
 from concurrent.futures import ThreadPoolExecutor, as_completed # For concurrent processing
+from confluence_client import ConfluenceClient
 
 # Configure basic logging as early as possible
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -72,17 +73,24 @@ if not JIRA_BASE_URL or not USERNAME or not API_TOKEN or not CONFLUENCE_BASE_URL
     logging.error("CRITICAL: JIRA_BASE_URL, JIRA_USERNAME, JIRA_API_TOKEN, and/or CONFLUENCE_BASE_URL are not set after attempting to load .env. Please ensure they are in your .env file or system environment.")
     exit(1)
 
+# Initialize Confluence client
+confluence_client = ConfluenceClient(
+    base_url=CONFLUENCE_BASE_URL,
+    username=USERNAME,
+    api_token=API_TOKEN,
+    max_concurrent_calls=5,
+    api_call_delay=0.1
+)
+
 MAX_RESULTS_PER_JIRA_PAGE = 100 # Configurable page size for Jira API calls
 API_CALL_DELAY_SECONDS = 0.1 # Basic delay after each significant API call
 
 # Semaphores to limit concurrent API calls to each service
 # These values can be tuned based on observed API behavior and rate limits.
 MAX_CONCURRENT_JIRA_CALLS = 5
-MAX_CONCURRENT_CONFLUENCE_CALLS = 5
 MAX_CONCURRENT_GDRIVE_CALLS = 2
 
 JIRA_SEMAPHORE = threading.Semaphore(MAX_CONCURRENT_JIRA_CALLS)
-CONFLUENCE_SEMAPHORE = threading.Semaphore(MAX_CONCURRENT_CONFLUENCE_CALLS)
 GDRIVE_SEMAPHORE = threading.Semaphore(MAX_CONCURRENT_GDRIVE_CALLS)
 
 # Global variable for the Drive service to avoid re-initializing it repeatedly.
@@ -141,22 +149,12 @@ def process_issue_fully(issue_json, indent_str="", skip_remote=False):
                 continue
 
             # Confluence
-            if "simplifi.atlassian.net/wiki/spaces/" in link_url or "/wiki/pages/" in link_url:
-                page_id = None
-                if "?pageId=" in link_url:
-                    try: page_id = link_url.split('?pageId=')[1].split('&')[0]
-                    except IndexError: logging.warning(f"{indent_str}      Could not parse pageId from URL: {link_url}")
-                elif "/pages/" in link_url:
-                    parts = link_url.split('/pages/')
-                    if len(parts) > 1:
-                        page_id_part = parts[1].split('/')[0]
-                        if page_id_part.isdigit(): page_id = page_id_part
-                        else: logging.warning(f"{indent_str}      Non-numeric page ID segment: {page_id_part} in URL: {link_url}")
-                    else: logging.warning(f"{indent_str}      Could not parse pageId from Confluence URL structure: {link_url}")
+            if confluence_client.is_confluence_url(link_url):
+                page_id = confluence_client.extract_page_id_from_url(link_url)
                 
                 if page_id:
                     logging.info(f"{indent_str}      Fetching Confluence content for page ID: {page_id}...")
-                    confluence_content = fetch_all_confluence_content_recursive(page_id)
+                    confluence_content = confluence_client.fetch_content_recursive(page_id)
                     if confluence_content and isinstance(issue_json["remote_links_data"][idx], dict):
                         issue_json["remote_links_data"][idx]["confluence_content_fetched"] = confluence_content
                         logging.info(f"{indent_str}      Successfully attached Confluence content for page ID: {page_id}")
@@ -596,108 +594,6 @@ def save_to_json(data, filename):
         json.dump(data, f, indent=2, ensure_ascii=False, default=str)
     logging.info(f"✅ Saved JSON data to: {filename}")
 
-def fetch_confluence_page_content(page_id):
-    """Fetch content of a Confluence page."""
-    url = f"{CONFLUENCE_BASE_URL}/rest/api/content/{page_id}?expand=body.storage,space,version"
-    auth = HTTPBasicAuth(USERNAME, API_TOKEN)
-    headers = {"Accept": "application/json"}
-
-    logging.debug(f"Fetching Confluence page: {page_id}")
-    CONFLUENCE_SEMAPHORE.acquire()
-    try:
-        time.sleep(API_CALL_DELAY_SECONDS) 
-        response = requests.get(url, headers=headers, auth=auth)
-        response.raise_for_status()  
-        page_data = response.json()
-        return {
-            "title": page_data.get("title"),
-            "url": page_data.get("_links", {}).get("webui"),
-            "content": page_data.get("body", {}).get("storage", {}).get("value"),
-            "space": page_data.get("space", {}).get("key"),
-            "version": page_data.get("version", {}).get("number")
-        }
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching Confluence page {page_id}: {e}")
-        error_details = {"error": str(e), "id": page_id}
-        if hasattr(e, 'response') and e.response is not None:
-            error_details["status_code"] = e.response.status_code
-            try:
-                error_details["details"] = e.response.json()
-            except ValueError:
-                error_details["details"] = e.response.text
-        return error_details
-    finally:
-        CONFLUENCE_SEMAPHORE.release()
-
-def fetch_confluence_child_pages(page_id):
-    """Fetch child pages of a Confluence page."""
-    url = f"{CONFLUENCE_BASE_URL}/rest/api/content/{page_id}/child/page"
-    auth = HTTPBasicAuth(USERNAME, API_TOKEN)
-    headers = {"Accept": "application/json"}
-    
-    child_pages_summary = []
-    logging.debug(f"Fetching Confluence child pages for: {page_id}")
-    CONFLUENCE_SEMAPHORE.acquire()
-    try:
-        time.sleep(API_CALL_DELAY_SECONDS) 
-        response = requests.get(url, headers=headers, auth=auth)
-        response.raise_for_status()
-        children_data = response.json()
-        for child in children_data.get("results", []):
-            child_pages_summary.append({
-                "id": child.get("id"),
-                "title": child.get("title"),
-                "url": child.get("_links", {}).get("webui")
-            })
-        return child_pages_summary
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching child pages for Confluence page {page_id}: {e}")
-        return [] 
-    finally:
-        CONFLUENCE_SEMAPHORE.release()
-
-def fetch_all_confluence_content_recursive(page_id, visited_pages=None):
-    """
-    Fetches a Confluence page's content and recursively fetches its children.
-    Keeps track of visited pages to avoid infinite loops in case of unexpected structures.
-    """
-    if visited_pages is None:
-        visited_pages = set()
-
-    if page_id in visited_pages:
-        logging.debug(f"Skipping already visited Confluence page: {page_id}")
-        return None
-    
-    visited_pages.add(page_id)
-
-    page_content_data = fetch_confluence_page_content(page_id)
-    if not page_content_data or "error" in page_content_data: # If fetching failed or returned an error structure
-        return {"id": page_id, "error": page_content_data.get("error", "Failed to fetch content")}
-
-    # page_content_data will now have title, url, content, space, version
-    fetched_data = {
-        "id": page_id,
-        "title": page_content_data.get("title"),
-        "url": page_content_data.get("url"),
-        "content": page_content_data.get("content"),
-        "space": page_content_data.get("space"),
-        "version": page_content_data.get("version"),
-        "children": []
-    }
-
-    child_pages_summary = fetch_confluence_child_pages(page_id)
-    if child_pages_summary:
-        logging.info(f"  Found {len(child_pages_summary)} children for Confluence page {page_id} ({page_content_data.get('title')})")
-        for child_summary in child_pages_summary:
-            child_id = child_summary.get("id")
-            if child_id:
-                logging.info(f"    Fetching child Confluence page: {child_id} ({child_summary.get('title')})...")
-                # Recursively fetch child content
-                child_full_content = fetch_all_confluence_content_recursive(child_id, visited_pages)
-                if child_full_content: # Only add if successfully fetched
-                    fetched_data["children"].append(child_full_content)
-    
-    return fetched_data
 
 def fetch_issues_by_project(project_key):
     """Fetch all issues for a given project."""
