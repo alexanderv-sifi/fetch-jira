@@ -1,0 +1,146 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Development Commands
+
+### Running the Application
+```bash
+# Run the main Jira fetcher script
+uv run jira-fetcher.py --mode <mode> --query <query_string> [options]
+
+# Examples:
+uv run jira-fetcher.py --mode issue --query YOUR_PROJECT_KEY-6812
+uv run jira-fetcher.py --mode jql --query "project = YOUR_PROJECT_KEY AND status = 'In Progress'"
+uv run jira-fetcher.py --mode project --query YOUR_PROJECT_KEY --skip-remote-content
+
+# For installed package (via uv pip install .):
+jira-fetcher --mode issue --query YOUR_PROJECT_KEY-123
+```
+
+### Dependency Management
+```bash
+# Install dependencies
+uv pip install -r requirements.txt
+
+# For Google Drive integration (optional)
+uv pip install google-api-python-client google-auth
+
+# Install package in development mode
+uv pip install -e .
+```
+
+### Testing
+There are no formal test commands configured yet, but the project structure suggests using pytest when tests are added.
+
+## Project Architecture
+
+### Current Structure (Monolithic)
+The project currently consists of a single main script (`jira_fetcher.py`) that handles all functionality:
+
+- **Jira API Integration**: Fetches issues, subtasks, linked issues, and epic children
+- **Confluence Integration**: Retrieves content from linked Confluence pages recursively
+- **Google Drive Integration**: Fetches metadata and content from linked Google Drive files
+- **Concurrent Processing**: Uses ThreadPoolExecutor with semaphores for rate limiting
+- **Output Management**: Generates structured JSON files with comprehensive metadata
+
+### Planned Modular Architecture
+According to `PROJECT_DEVELOPMENT_PLAN.md`, the project will be refactored into:
+
+- `main.py` - CLI orchestration and main processing loop
+- `config.py` - Configuration management (.env file handling)
+- `jira_client.py` - Jira API interactions
+- `confluence_client.py` - Confluence API interactions
+- `gdrive_client.py` - Google Drive API interactions
+- `data_processor.py` - Issue processing and enrichment logic
+- `output_manager.py` - Data output and file management
+- `utils.py` - Common utility functions
+
+### Key Components
+
+**Configuration Requirements**:
+- `.env` file with Jira/Confluence credentials and API tokens
+- Google Cloud ADC setup for Google Drive integration
+- Configurable rate limiting and concurrency controls
+
+**Data Flow**:
+1. CLI parses arguments (issue/jql/project modes)
+2. Fetches primary Jira data based on mode
+3. Processes related data (subtasks, linked issues, epic children)
+4. Fetches remote content from Confluence and Google Drive
+5. Aggregates all data into structured JSON output
+
+**Concurrency Model**:
+- ThreadPoolExecutor for concurrent API calls
+- Semaphores for rate limiting (separate limits for each service)
+- Thread-safe queue for processing related issues
+
+## Development Standards
+
+This project follows comprehensive development guidelines defined in `.cursor/rules/DEVELOPMENT_GUIDELINES.md`. 
+
+### Key Cursor Rules to Follow
+
+**AI Assistant Guidelines:**
+- Always reference specific rulesets when making suggestions (e.g., "As per Ruleset 1.2 of DEVELOPMENT_GUIDELINES.md")
+- Enforce guidelines proactively when generating code
+- Check both common standards (`.cursor/rules/common/`) and domain-specific rules
+
+**Code Quality (Ruleset 1-2):**
+- All API endpoints must use Pydantic models for request/response bodies
+- Use `async def` for all FastAPI route handlers
+- Implement proper type hints and snake_case naming
+- Pydantic models require `Field(description="...")` for API documentation
+
+**Logging Standards (Ruleset 3):**
+- Use `structlog.get_logger()` exclusively in `src/` directory
+- Avoid `print()` statements - use structured logging instead
+- Bind contextual variables at API route handler start
+- Use appropriate log levels: info for flow, debug for diagnostics, error with exc_info=True
+
+**Security (Ruleset 4):**
+- Flag hardcoded API keys or high-entropy strings
+- Use GCP Secret Manager for production secrets
+- Implement proper authentication patterns per service
+- All error responses must use Pydantic models
+
+**Testing (Ruleset 5):**
+- Use pytest naming conventions (`test_*.py`, `def test_*()`)
+- Mock all external service calls (Slack, Jira, Google APIs)
+- Tests must contain assert statements
+- Mirror `src/` structure in `tests/` directory
+
+**Documentation (Ruleset 6):**
+- All `.py` files in `src/` need module-level docstrings
+- Public functions/methods/classes require docstrings
+- API models need `Field(description="...")` for auto-documentation
+
+**Operational Standards (Ruleset 7):**
+- Implement timeouts on all external service calls
+- Use `tenacity` for retry logic with service-specific configurations
+- Include `processing_time_ms` in response models
+- Implement proper TTL fields for data models
+
+**Version Control (Ruleset 8):**
+- Use imperative mood commit messages ("Fix:", "Add:", "Update:")
+- Make atomic, frequent commits
+- Reference issue IDs in commit messages
+
+## Output Format
+
+The script generates timestamped JSON files with structure:
+- `export_metadata` - Information about the fetch operation
+- `processed_issues_data` - Array of processed Jira issues with:
+  - Standard Jira fields
+  - `changelog` - Issue history
+  - `remote_links_data` - Confluence/Google Drive content
+  - `epic_children_data` - Child issues for epics
+  - `subtasks_data` - Linked subtasks
+  - `linked_issues_data` - Related issues
+
+## Important Notes
+
+- Requires Python 3.12+ and `uv` package manager
+- Google Drive integration requires additional setup (ADC configuration)
+- The project is currently undergoing architectural refactoring from monolithic to modular design
+- Extensive cursor rules exist for maintaining code quality and consistency

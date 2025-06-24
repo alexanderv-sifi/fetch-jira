@@ -1,25 +1,33 @@
-# Fetch Jira
+# CAKE - Corporate Aggregation & Knowledge Extraction
 
-`fetch-jira` is a Python utility designed to comprehensively extract data from Jira, including issue details, subtasks, linked issues, and epic children. It can also fetch content from linked Confluence pages and Google Drive files. The aggregated data is saved into a structured JSON file, suitable for analysis or input into other systems.
+CAKE is a powerful Python utility designed to comprehensively extract and aggregate corporate knowledge from multiple platforms. It extracts content from Jira issues, Confluence pages (with recursive child fetching), and Google Drive files, including permissions and access control data. The aggregated data can be output in multiple formats including individual JSONL files per page, perfect for Vertex AI RAG ingestion and other AI/ML workflows.
 
 ## Features
 
-*   **Multiple Fetch Modes:** Retrieve Jira data based on:
-    *   Specific Issue Key
-    *   JQL (Jira Query Language) Query
-    *   Entire Project Key
-*   **Deep Data Extraction:** Fetches not only primary issue details but also:
-    *   Subtasks
-    *   Linked issues (inward and outward)
-    *   Children of Epics
-*   **Remote Content Retrieval:**
-    *   Fetches content from linked Confluence pages (including child pages recursively).
-    *   Fetches metadata and content from linked Google Drive files and folders (supports Google Docs, Sheets, Slides export to text/csv, and other file types).
-*   **Concurrency:** Utilizes threading and semaphores for efficient, concurrent API calls to Jira, Confluence, and Google Drive, respecting potential rate limits.
-*   **Configuration:** Uses a `.env` file for easy configuration of API endpoints and credentials.
-*   **Output:** Generates a detailed JSON file containing all fetched data, including a metadata section about the export.
-*   **Flexible Content Fetching:** Option to skip fetching remote content from Confluence and Google Drive for faster metadata-only exports.
-*   **Targeted Issue and Children Fetch:** By using the `issue` mode with a specific issue ID, you can fetch that issue along with its direct children (subtasks, linked issues, and children of an Epic). The script will then also process these children to retrieve their full details.
+*   **Multiple Platform Support:**
+    *   **Jira:** Issues, subtasks, linked issues, epic children via issue key, JQL query, or entire project
+    *   **Confluence:** Pages with recursive child fetching, including permissions/ACLs
+    *   **Google Drive:** Files, folders, documents with metadata and content extraction
+*   **Enterprise-Ready Security:**
+    *   Captures permissions and access control lists (ACLs) for Confluence pages
+    *   Identifies restricted content for proper access control in downstream systems
+    *   Respects API rate limits with configurable concurrency controls
+*   **RAG-Optimized Output Formats:**
+    *   **Individual JSONL per page** - Perfect for Vertex AI RAG corpus loading
+    *   **Single JSONL file** - All content in one file for batch processing  
+    *   **Traditional JSON** - Complete hierarchical data with metadata
+*   **Intelligent Content Processing:**
+    *   HTML content cleaned and converted to plain text for RAG ingestion
+    *   Preserves document hierarchy and relationships
+    *   Includes rich metadata (authors, timestamps, versions, ancestors)
+*   **High Performance:**
+    *   Concurrent API calls with threading and semaphores
+    *   Configurable rate limiting per service
+    *   Efficient recursive processing with cycle detection
+*   **Enterprise Configuration:** 
+    *   Environment-based configuration via `.env` files
+    *   Support for Google Cloud ADC for Drive integration
+    *   Flexible authentication for corporate environments
 
 ## Prerequisites
 
@@ -71,71 +79,110 @@
 
 ## Usage
 
-The script is run via the `jira-fetcher` command-line interface (if installed as a package) or by directly executing `jira-fetcher.py` using `uv run`.
+CAKE is run via the `cake` command-line interface (if installed as a package) or by directly executing `cake.py` using `uv run`.
 
 **General command structure:**
 
 ```bash
-uv run jira-fetcher.py --mode <mode> --query <query_string> [options]
+uv run cake.py --mode <mode> --query <query_string> [options]
 ```
 Or, if installed as a package (e.g., via `uv pip install .`):
 ```bash
-jira-fetcher --mode <mode> --query <query_string> [options]
+cake --mode <mode> --query <query_string> [options]
 ```
 
 **Arguments:**
 
 *   `--mode`: (Required) The mode for fetching data.
-    *   `issue`: Fetch a single issue and its related data.
-    *   `jql`: Fetch issues based on a JQL query.
-    *   `project`: Fetch all issues for a specific project.
+    *   `issue`: Fetch a single Jira issue and its related data.
+    *   `jql`: Fetch Jira issues based on a JQL query.
+    *   `project`: Fetch all issues for a specific Jira project.
+    *   `confluence`: Fetch a Confluence page and all its children recursively.
 *   `--query`: (Required) The identifier for the fetch operation.
     *   For `issue` mode: The Jira issue key (e.g., `DWDEV-123`).
     *   For `jql` mode: The JQL query string (e.g., `project = DWDEV AND status = "In Progress"`).
     *   For `project` mode: The Jira project key (e.g., `DWDEV`).
-*   `--skip-remote-content`: (Optional) If set, the script will fetch metadata for Confluence and Google Drive links but will not download their actual content.
+    *   For `confluence` mode: Confluence page ID or full URL.
+*   `--output-format`: (Optional) Output format: `json` (default), `jsonl`, or `jsonl-per-page`.
+*   `--include-permissions`: (Optional) Include permissions/ACL data for Confluence pages.
+*   `--skip-remote-content`: (Optional) Skip fetching content from Confluence and Google Drive links.
 *   `--debug`: (Optional) Enables detailed debug logging.
 
 **Examples:**
 
-1.  **Fetch a specific issue:**
+1.  **Fetch Confluence pages with individual JSONL files (perfect for RAG):**
     ```bash
-    uv run jira-fetcher.py --mode issue --query DWDEV-6812
+    uv run cake.py --mode confluence --query 3492511763 --output-format jsonl-per-page --include-permissions
     ```
 
-2.  **Fetch issues using a JQL query:**
+2.  **Fetch a specific Jira issue:**
     ```bash
-    uv run jira-fetcher.py --mode jql --query "project = DWDEV AND issuetype = Epic AND status = Open ORDER BY created DESC"
+    uv run cake.py --mode issue --query DWDEV-6812
     ```
 
-3.  **Fetch all issues for a project and skip remote content:**
+3.  **Fetch Jira issues using a JQL query:**
     ```bash
-    uv run jira-fetcher.py --mode project --query DWDEV --skip-remote-content
+    uv run cake.py --mode jql --query "project = DWDEV AND issuetype = Epic AND status = Open ORDER BY created DESC"
     ```
 
-4.  **Fetch a specific issue with debug logging:**
+4.  **Fetch Confluence page with single JSONL output:**
     ```bash
-    uv run jira-fetcher.py --mode issue --query MYPROJ-101 --debug
+    uv run cake.py --mode confluence --query "https://simplifi.atlassian.net/wiki/spaces/DW/pages/3492511763" --output-format jsonl
     ```
 
-5.  **Fetch a specific issue and its children (subtasks, linked issues, epic children):**
+5.  **Fetch all issues for a project with traditional JSON:**
     ```bash
-    uv run jira-fetcher.py --mode issue --query PARENT-123
+    uv run cake.py --mode project --query DWDEV --skip-remote-content
     ```
-    The output JSON for `PARENT-123` will contain sections like `subtasks_data`, `linked_issues_data`, and `epic_children_data` listing these children. The full details of these children will also typically be fetched and included as separate entries in the main `processed_issues_data` list as the script processes them from its queue.
 
-## Output
+6.  **Debug mode for troubleshooting:**
+    ```bash
+    uv run cake.py --mode confluence --query 3492511763 --debug
+    ```
 
-The script generates a JSON file in the root directory named according to the fetch parameters and timestamp, e.g., `jira_export_DWDEV-6812_YYYYMMDD_HHMMSS_raw.json` or `jira_export_jql_xxxxxxxxxx_YYYYMMDD_HHMMSS_raw.json`.
+## Output Formats
 
-This JSON file contains:
-*   `export_metadata`: Information about the fetch operation (mode, query, timestamp, etc.).
-*   `processed_issues_data`: A list of all processed Jira issues. Each issue object includes:
-    *   Standard Jira issue fields.
-    *   `remote_links_data`: Information about linked Confluence pages or Google Drive files, potentially including their fetched content (`confluence_content_fetched`, `gdrive_content_fetched`).
-    *   `epic_children_data`: If the issue is an Epic, a list of its child issues (summaries).
-    *   `subtasks_data`: A list of subtasks linked to the issue.
-    *   `linked_issues_data`: A list of other issues linked to this one.
+CAKE supports multiple output formats optimized for different use cases:
+
+### Individual JSONL Files (`--output-format jsonl-per-page`)
+**Perfect for Vertex AI RAG corpus loading**
+- Creates a directory with one JSONL file per page/issue
+- Each file contains exactly one document in RAG-ready format
+- Example: `cake_export_confluence_3492511763_TIMESTAMP_raw_jsonl_files/`
+  - `confluence_3492511763.jsonl`
+  - `confluence_4428169266.jsonl` 
+  - ... (106 total files)
+
+### Single JSONL File (`--output-format jsonl`)
+**For batch processing and streaming ingestion**
+- All documents in one JSONL file
+- One document per line, easy to stream and process
+- Example: `cake_export_confluence_3492511763_TIMESTAMP.jsonl`
+
+### Traditional JSON (`--output-format json`, default)
+**Complete hierarchical data with full metadata**
+- Preserves original structure and relationships
+- Includes comprehensive export metadata
+- Example: `cake_export_confluence_3492511763_TIMESTAMP_raw.json`
+
+### RAG Document Format
+Each document (in JSONL formats) contains:
+```json
+{
+  "id": "confluence_3492511763",
+  "title": "Page Title",
+  "content": "Clean text content without HTML",
+  "url": "https://domain.atlassian.net/wiki/...",
+  "metadata": {
+    "source": "confluence|jira|gdrive",
+    "permissions": { "is_restricted": false, ... },
+    "space": "DW",
+    "page_id": "3492511763",
+    "ancestors": [...],
+    "last_modified": "2025-06-12T15:15:45.573Z"
+  }
+}
+```
 
 ## Development / Running Locally
 
@@ -143,9 +190,9 @@ Ensure Python 3.12+ and `uv` are installed.
 
 1.  Clone the repository.
 2.  Set up your `.env` file as described in the "Setup" section.
-3.  You can run the script directly:
+3.  You can run CAKE directly:
     ```bash
-    uv run jira-fetcher.py --mode issue --query YOUR-ISSUE-KEY
+    uv run cake.py --mode confluence --query YOUR-PAGE-ID --output-format jsonl-per-page
     ```
 
 ### Architecture Notes

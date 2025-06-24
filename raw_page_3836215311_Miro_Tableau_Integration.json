@@ -1,0 +1,439 @@
+{
+  "id": "3836215311",
+  "type": "page",
+  "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3836215311",
+  "status": "current",
+  "title": "Miro Tableau Integration",
+  "space": {
+    "id": 3473047560,
+    "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:space/3473047560",
+    "key": "DW",
+    "alias": "DW",
+    "name": "Digital Workplace Solutions",
+    "type": "global",
+    "status": "current",
+    "_expandable": {
+      "settings": "/rest/api/space/DW/settings",
+      "metadata": "",
+      "identifiers": "",
+      "roles": "",
+      "icon": "",
+      "typeSettings": "",
+      "description": "",
+      "history": "",
+      "operations": "",
+      "lookAndFeel": "/rest/api/settings/lookandfeel?spaceKey=DW",
+      "permissions": "",
+      "theme": "/rest/api/space/DW/theme",
+      "homepage": "/rest/api/content/3473048177"
+    },
+    "_links": {
+      "webui": "/spaces/DW",
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/space/DW"
+    }
+  },
+  "history": {
+    "latest": true,
+    "createdBy": {
+      "type": "known",
+      "accountId": "61d259f79ee70a00684ad401",
+      "accountType": "atlassian",
+      "email": "isaacg@simpli.fi",
+      "publicName": "Isaac Garcia",
+      "profilePicture": {
+        "path": "/wiki/aa-avatar/61d259f79ee70a00684ad401",
+        "width": 48,
+        "height": 48,
+        "isDefault": false
+      },
+      "displayName": "Isaac Garcia",
+      "isExternalCollaborator": false,
+      "isGuest": false,
+      "locale": "en_US",
+      "accountStatus": "active",
+      "_expandable": {
+        "operations": "",
+        "personalSpace": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/user?accountId=61d259f79ee70a00684ad401"
+      }
+    },
+    "createdDate": "2023-07-20T21:09:39.597Z",
+    "_expandable": {
+      "lastUpdated": "",
+      "previousVersion": "",
+      "lastOwnedBy": "",
+      "contributors": "",
+      "nextVersion": "",
+      "ownedBy": ""
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836215311/history"
+    }
+  },
+  "version": {
+    "by": {
+      "type": "known",
+      "accountId": "61d259f79ee70a00684ad401",
+      "accountType": "atlassian",
+      "email": "isaacg@simpli.fi",
+      "publicName": "Isaac Garcia",
+      "profilePicture": {
+        "path": "/wiki/aa-avatar/61d259f79ee70a00684ad401",
+        "width": 48,
+        "height": 48,
+        "isDefault": false
+      },
+      "displayName": "Isaac Garcia",
+      "isExternalCollaborator": false,
+      "isGuest": false,
+      "locale": "en_US",
+      "accountStatus": "active",
+      "_expandable": {
+        "operations": "",
+        "personalSpace": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/user?accountId=61d259f79ee70a00684ad401"
+      }
+    },
+    "when": "2024-06-03T17:28:08.245Z",
+    "friendlyWhen": "Jun 03, 2024",
+    "message": "",
+    "number": 2,
+    "minorEdit": false,
+    "ncsStepVersion": "1",
+    "ncsStepVersionSource": "ncs-ack",
+    "confRev": "confluence$content$3836215311.15",
+    "contentTypeModified": false,
+    "_expandable": {
+      "collaborators": "",
+      "content": "/rest/api/content/3836215311"
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836215311/version/2"
+    }
+  },
+  "ancestors": [
+    {
+      "id": "3473048177",
+      "type": "page",
+      "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3473048177",
+      "status": "current",
+      "title": "Digital Workplace Solutions",
+      "macroRenderedOutput": {},
+      "extensions": {
+        "position": 372
+      },
+      "_expandable": {
+        "container": "/rest/api/space/DW",
+        "metadata": "",
+        "restrictions": "/rest/api/content/3473048177/restriction/byOperation",
+        "history": "/rest/api/content/3473048177/history",
+        "body": "",
+        "version": "",
+        "descendants": "/rest/api/content/3473048177/descendant",
+        "space": "/rest/api/space/DW",
+        "childTypes": "",
+        "schedulePublishInfo": "",
+        "operations": "",
+        "schedulePublishDate": "",
+        "children": "/rest/api/content/3473048177/child",
+        "ancestors": "",
+        "draftVersion": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3473048177",
+        "tinyui": "/x/cYICzw",
+        "editui": "/pages/resumedraft.action?draftId=3473048177",
+        "webui": "/spaces/DW/overview",
+        "edituiv2": "/spaces/DW/pages/edit-v2/3473048177"
+      }
+    },
+    {
+      "id": "3492511763",
+      "type": "page",
+      "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3492511763",
+      "status": "current",
+      "title": "Simplifi Employee Technical Guides",
+      "macroRenderedOutput": {},
+      "extensions": {
+        "position": 2810325
+      },
+      "_expandable": {
+        "container": "/rest/api/space/DW",
+        "metadata": "",
+        "restrictions": "/rest/api/content/3492511763/restriction/byOperation",
+        "history": "/rest/api/content/3492511763/history",
+        "body": "",
+        "version": "",
+        "descendants": "/rest/api/content/3492511763/descendant",
+        "space": "/rest/api/space/DW",
+        "childTypes": "",
+        "schedulePublishInfo": "",
+        "operations": "",
+        "schedulePublishDate": "",
+        "children": "/rest/api/content/3492511763/child",
+        "ancestors": "",
+        "draftVersion": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3492511763",
+        "tinyui": "/x/E4Ar0",
+        "editui": "/pages/resumedraft.action?draftId=3492511763",
+        "webui": "/spaces/DW/pages/3492511763/Simplifi+Employee+Technical+Guides",
+        "edituiv2": "/spaces/DW/pages/edit-v2/3492511763"
+      }
+    },
+    {
+      "id": "3628924947",
+      "type": "page",
+      "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3628924947",
+      "status": "current",
+      "title": "Miro",
+      "macroRenderedOutput": {},
+      "extensions": {
+        "position": 514573536
+      },
+      "_expandable": {
+        "container": "/rest/api/space/DW",
+        "metadata": "",
+        "restrictions": "/rest/api/content/3628924947/restriction/byOperation",
+        "history": "/rest/api/content/3628924947/history",
+        "body": "",
+        "version": "",
+        "descendants": "/rest/api/content/3628924947/descendant",
+        "space": "/rest/api/space/DW",
+        "childTypes": "",
+        "schedulePublishInfo": "",
+        "operations": "",
+        "schedulePublishDate": "",
+        "children": "/rest/api/content/3628924947/child",
+        "ancestors": "",
+        "draftVersion": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3628924947",
+        "tinyui": "/x/EwBN2",
+        "editui": "/pages/resumedraft.action?draftId=3628924947",
+        "webui": "/spaces/DW/pages/3628924947/Miro",
+        "edituiv2": "/spaces/DW/pages/edit-v2/3628924947"
+      }
+    },
+    {
+      "id": "3836116993",
+      "type": "page",
+      "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3836116993",
+      "status": "current",
+      "title": "Miro Integrations",
+      "macroRenderedOutput": {},
+      "extensions": {
+        "position": 2107
+      },
+      "_expandable": {
+        "container": "/rest/api/space/DW",
+        "metadata": "",
+        "restrictions": "/rest/api/content/3836116993/restriction/byOperation",
+        "history": "/rest/api/content/3836116993/history",
+        "body": "",
+        "version": "",
+        "descendants": "/rest/api/content/3836116993/descendant",
+        "space": "/rest/api/space/DW",
+        "childTypes": "",
+        "schedulePublishInfo": "",
+        "operations": "",
+        "schedulePublishDate": "",
+        "children": "/rest/api/content/3836116993/child",
+        "ancestors": "",
+        "draftVersion": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836116993",
+        "tinyui": "/x/AYCm5",
+        "editui": "/pages/resumedraft.action?draftId=3836116993",
+        "webui": "/spaces/DW/pages/3836116993/Miro+Integrations",
+        "edituiv2": "/spaces/DW/pages/edit-v2/3836116993"
+      }
+    }
+  ],
+  "operations": [
+    {
+      "operation": "read",
+      "targetType": "page"
+    },
+    {
+      "operation": "update",
+      "targetType": "page"
+    },
+    {
+      "operation": "delete",
+      "targetType": "page"
+    },
+    {
+      "operation": "restrict_content",
+      "targetType": "page"
+    },
+    {
+      "operation": "clear_permissions",
+      "targetType": "page"
+    },
+    {
+      "operation": "archive",
+      "targetType": "page"
+    },
+    {
+      "operation": "create",
+      "targetType": "database"
+    },
+    {
+      "operation": "create",
+      "targetType": "folder"
+    },
+    {
+      "operation": "create",
+      "targetType": "attachment"
+    },
+    {
+      "operation": "create",
+      "targetType": "ac:com.valiantys.spreadsheets:spc-project-tables-custom-content"
+    },
+    {
+      "operation": "create",
+      "targetType": "comment"
+    },
+    {
+      "operation": "create",
+      "targetType": "page"
+    },
+    {
+      "operation": "create",
+      "targetType": "embed"
+    },
+    {
+      "operation": "create",
+      "targetType": "whiteboard"
+    },
+    {
+      "operation": "create",
+      "targetType": "ac:com.mxgraph.confluence.plugins.diagramly:drawio-diagram"
+    }
+  ],
+  "children": {
+    "_expandable": {
+      "database": "/rest/api/content/3836215311/child/database",
+      "ac__com_mxgraph_confluence_plugins_diagramly__drawio_diagram": "/rest/api/content/3836215311/child/ac:com.mxgraph.confluence.plugins.diagramly:drawio-diagram",
+      "folder": "/rest/api/content/3836215311/child/folder",
+      "attachment": "/rest/api/content/3836215311/child/attachment",
+      "ac__com_valiantys_spreadsheets__spc_project_tables_custom_content": "/rest/api/content/3836215311/child/ac:com.valiantys.spreadsheets:spc-project-tables-custom-content",
+      "comment": "/rest/api/content/3836215311/child/comment",
+      "page": "/rest/api/content/3836215311/child/page",
+      "embed": "/rest/api/content/3836215311/child/embed",
+      "whiteboard": "/rest/api/content/3836215311/child/whiteboard"
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836215311/child"
+    }
+  },
+  "descendants": {
+    "_expandable": {
+      "database": "/rest/api/content/3836215311/descendant/database",
+      "ac__com_mxgraph_confluence_plugins_diagramly__drawio_diagram": "/rest/api/content/3836215311/descendant/ac:com.mxgraph.confluence.plugins.diagramly:drawio-diagram",
+      "folder": "/rest/api/content/3836215311/descendant/folder",
+      "attachment": "/rest/api/content/3836215311/descendant/attachment",
+      "ac__com_valiantys_spreadsheets__spc_project_tables_custom_content": "/rest/api/content/3836215311/descendant/ac:com.valiantys.spreadsheets:spc-project-tables-custom-content",
+      "comment": "/rest/api/content/3836215311/descendant/comment",
+      "page": "/rest/api/content/3836215311/descendant/page",
+      "embed": "/rest/api/content/3836215311/descendant/embed",
+      "whiteboard": "/rest/api/content/3836215311/descendant/whiteboard"
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836215311/descendant"
+    }
+  },
+  "container": {
+    "id": 3473047560,
+    "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:space/3473047560",
+    "key": "DW",
+    "alias": "DW",
+    "name": "Digital Workplace Solutions",
+    "type": "global",
+    "status": "current",
+    "_expandable": {
+      "settings": "/rest/api/space/DW/settings",
+      "metadata": "",
+      "identifiers": "",
+      "roles": "",
+      "icon": "",
+      "typeSettings": "",
+      "description": "",
+      "history": "",
+      "operations": "",
+      "lookAndFeel": "/rest/api/settings/lookandfeel?spaceKey=DW",
+      "permissions": "",
+      "theme": "/rest/api/space/DW/theme",
+      "homepage": "/rest/api/content/3473048177"
+    },
+    "_links": {
+      "webui": "/spaces/DW",
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/space/DW"
+    }
+  },
+  "macroRenderedOutput": {},
+  "body": {
+    "_expandable": {
+      "editor": "",
+      "atlas_doc_format": "",
+      "view": "",
+      "export_view": "",
+      "styled_view": "",
+      "dynamic": "",
+      "storage": "",
+      "editor2": "",
+      "anonymous_export_view": ""
+    }
+  },
+  "metadata": {
+    "_expandable": {
+      "lastEditedTime": "",
+      "currentuser": "",
+      "comments": "",
+      "createdBySpaceBlueprint": "",
+      "isActiveLiveEditSession": "",
+      "sourceTemplateEntityId": "",
+      "simple": "",
+      "properties": "",
+      "frontend": "",
+      "labels": "",
+      "likes": ""
+    }
+  },
+  "extensions": {
+    "position": 3728
+  },
+  "restrictions": {
+    "_expandable": {
+      "read": "",
+      "update": ""
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836215311/restriction/byOperation"
+    }
+  },
+  "_expandable": {
+    "childTypes": "",
+    "schedulePublishInfo": "",
+    "schedulePublishDate": "",
+    "draftVersion": ""
+  },
+  "_links": {
+    "editui": "/pages/resumedraft.action?draftId=3836215311",
+    "webui": "/spaces/DW/pages/3836215311/Miro+Tableau+Integration",
+    "edituiv2": "/spaces/DW/pages/edit-v2/3836215311",
+    "context": "/wiki",
+    "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3836215311",
+    "tinyui": "/x/DwCo5",
+    "collection": "/rest/api/content",
+    "base": "https://simplifi.atlassian.net/wiki"
+  }
+}

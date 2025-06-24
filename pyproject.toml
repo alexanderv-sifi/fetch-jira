@@ -1,10 +1,10 @@
 [tool.uv.sources]
-fetch-jira = { path = ".", editable = true }
+cake = { path = ".", editable = true }
 
 [project]
-name = "fetch-jira"
+name = "cake"
 version = "0.1.0"
-description = "Add your description here"
+description = "CAKE - Corporate Aggregation & Knowledge Extraction. Extract content from Jira, Confluence, and Google Drive with permissions for RAG ingestion."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -15,4 +15,4 @@ dependencies = [
 ]
 
 [project.scripts]
-jira-fetcher = "jira_fetcher:main"
+cake = "cake:main"

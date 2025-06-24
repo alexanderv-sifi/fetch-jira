@@ -37,6 +37,32 @@ class ConfluenceClient:
         
         logging.debug(f"Initialized Confluence client for {base_url}")
     
+    def fetch_page_content_raw(self, page_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch RAW content of a Confluence page with ALL fields for debugging.
+        
+        Args:
+            page_id: Confluence page ID
+            
+        Returns:
+            Raw dictionary with ALL page data from API
+        """
+        url = f"{self.base_url}/rest/api/content/{page_id}?expand=body,space,version,metadata,history,ancestors,restrictions,container,extensions,children,descendants,operations,status"
+        
+        logging.info(f"Fetching RAW Confluence page data: {page_id}")
+        self.semaphore.acquire()
+        try:
+            time.sleep(self.api_call_delay)
+            response = requests.get(url, headers=self.headers, auth=self.auth)
+            response.raise_for_status()
+            page_data = response.json()
+            return page_data  # Return everything raw
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching RAW Confluence page {page_id}: {e}")
+            return {"error": str(e), "id": page_id}
+        finally:
+            self.semaphore.release()
+
     def fetch_page_content(self, page_id: str) -> Optional[Dict[str, Any]]:
         """
         Fetch content of a Confluence page.
@@ -47,7 +73,7 @@ class ConfluenceClient:
         Returns:
             Dictionary with page data or error information
         """
-        url = f"{self.base_url}/rest/api/content/{page_id}?expand=body.storage,space,version"
+        url = f"{self.base_url}/rest/api/content/{page_id}?expand=body.storage,body.view,body.export_view,space,version,metadata.labels,metadata.properties,history.lastUpdated,ancestors,restrictions.read,restrictions.update,extensions"
         
         logging.debug(f"Fetching Confluence page: {page_id}")
         self.semaphore.acquire()
@@ -56,12 +82,60 @@ class ConfluenceClient:
             response = requests.get(url, headers=self.headers, auth=self.auth)
             response.raise_for_status()
             page_data = response.json()
+            # Extract labels
+            labels = []
+            metadata = page_data.get("metadata", {})
+            if "labels" in metadata:
+                labels = [label.get("name", "") for label in metadata.get("labels", {}).get("results", [])]
+                logging.info(f"Extracted labels for page {page_id}: {labels}")
+            
+            # Extract ancestors for breadcrumb info
+            ancestors = []
+            for ancestor in page_data.get("ancestors", []):
+                ancestors.append({
+                    "id": ancestor.get("id"),
+                    "title": ancestor.get("title"),
+                    "type": ancestor.get("type")
+                })
+            
+            # Extract restrictions/permissions
+            restrictions = page_data.get("restrictions", {})
+            read_restrictions = restrictions.get("read", {}).get("restrictions", {})
+            update_restrictions = restrictions.get("update", {}).get("restrictions", {})
+            
+            permissions = {
+                "read_restrictions": {
+                    "users": [user.get("displayName", "") for user in read_restrictions.get("user", {}).get("results", [])],
+                    "groups": [group.get("name", "") for group in read_restrictions.get("group", {}).get("results", [])]
+                },
+                "update_restrictions": {
+                    "users": [user.get("displayName", "") for user in update_restrictions.get("user", {}).get("results", [])],
+                    "groups": [group.get("name", "") for group in update_restrictions.get("group", {}).get("results", [])]
+                },
+                "is_restricted": len(read_restrictions.get("user", {}).get("results", [])) > 0 or len(read_restrictions.get("group", {}).get("results", [])) > 0
+            }
+            
+            # Extract space name and other metadata
+            space_info = page_data.get("space", {})
+            space_name = space_info.get("name", "")
+            
+            # Extract last modified info
+            history = page_data.get("history", {})
+            last_updated = history.get("lastUpdated", {})
+            
             return {
                 "title": page_data.get("title"),
                 "url": page_data.get("_links", {}).get("webui"),
                 "content": page_data.get("body", {}).get("storage", {}).get("value"),
-                "space": page_data.get("space", {}).get("key"),
-                "version": page_data.get("version", {}).get("number")
+                "space": space_info.get("key"),
+                "space_name": space_name,
+                "version": page_data.get("version", {}).get("number"),
+                "labels": labels,
+                "ancestors": ancestors,
+                "permissions": permissions,
+                "created_date": page_data.get("history", {}).get("createdDate"),
+                "last_modified": last_updated.get("when"),
+                "author": last_updated.get("by", {}).get("displayName")
             }
         except requests.exceptions.RequestException as e:
             logging.error(f"Error fetching Confluence page {page_id}: {e}")
@@ -78,7 +152,7 @@ class ConfluenceClient:
     
     def fetch_child_pages(self, page_id: str) -> List[Dict[str, Any]]:
         """
-        Fetch child pages of a Confluence page.
+        Fetch child pages of a Confluence page with pagination support.
         
         Args:
             page_id: Parent page ID
@@ -86,28 +160,51 @@ class ConfluenceClient:
         Returns:
             List of child page summaries
         """
-        url = f"{self.base_url}/rest/api/content/{page_id}/child/page"
-        
         child_pages_summary = []
+        start = 0
+        limit = 100  # Increased from default 25 to reduce API calls
+        
         logging.debug(f"Fetching Confluence child pages for: {page_id}")
-        self.semaphore.acquire()
-        try:
-            time.sleep(self.api_call_delay)
-            response = requests.get(url, headers=self.headers, auth=self.auth)
-            response.raise_for_status()
-            children_data = response.json()
-            for child in children_data.get("results", []):
-                child_pages_summary.append({
-                    "id": child.get("id"),
-                    "title": child.get("title"),
-                    "url": child.get("_links", {}).get("webui")
-                })
-            return child_pages_summary
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Error fetching child pages for Confluence page {page_id}: {e}")
-            return []
-        finally:
-            self.semaphore.release()
+        
+        while True:
+            url = f"{self.base_url}/rest/api/content/{page_id}/child/page?start={start}&limit={limit}"
+            
+            self.semaphore.acquire()
+            try:
+                time.sleep(self.api_call_delay)
+                response = requests.get(url, headers=self.headers, auth=self.auth)
+                response.raise_for_status()
+                children_data = response.json()
+                
+                results = children_data.get("results", [])
+                if not results:
+                    # No more results, we're done
+                    break
+                
+                for child in results:
+                    child_pages_summary.append({
+                        "id": child.get("id"),
+                        "title": child.get("title"),
+                        "url": child.get("_links", {}).get("webui")
+                    })
+                
+                # Check if we got fewer results than requested (last page)
+                if len(results) < limit:
+                    break
+                
+                # Move to next page
+                start += limit
+                
+            except requests.exceptions.RequestException as e:
+                logging.error(f"Error fetching child pages for Confluence page {page_id}: {e}")
+                break
+            finally:
+                self.semaphore.release()
+        
+        if len(child_pages_summary) > 25:
+            logging.info(f"Found {len(child_pages_summary)} child pages for {page_id} (using pagination)")
+        
+        return child_pages_summary
     
     def fetch_content_recursive(self, page_id: str, visited_pages: Optional[Set[str]] = None) -> Optional[Dict[str, Any]]:
         """
@@ -140,7 +237,14 @@ class ConfluenceClient:
             "url": page_content_data.get("url"),
             "content": page_content_data.get("content"),
             "space": page_content_data.get("space"),
+            "space_name": page_content_data.get("space_name"),
             "version": page_content_data.get("version"),
+            "labels": page_content_data.get("labels", []),
+            "permissions": page_content_data.get("permissions", {}),
+            "ancestors": page_content_data.get("ancestors", []),
+            "created_date": page_content_data.get("created_date"),
+            "last_modified": page_content_data.get("last_modified"),
+            "author": page_content_data.get("author"),
             "children": []
         }
 

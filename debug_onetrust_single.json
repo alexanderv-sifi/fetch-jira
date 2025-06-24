@@ -1,0 +1,365 @@
+{
+  "id": "4027383817",
+  "type": "page",
+  "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/4027383817",
+  "status": "current",
+  "title": "onetrust Privacy Platform",
+  "space": {
+    "id": 3473047560,
+    "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:space/3473047560",
+    "key": "DW",
+    "alias": "DW",
+    "name": "Digital Workplace Solutions",
+    "type": "global",
+    "status": "current",
+    "_expandable": {
+      "settings": "/rest/api/space/DW/settings",
+      "metadata": "",
+      "identifiers": "",
+      "roles": "",
+      "icon": "",
+      "typeSettings": "",
+      "description": "",
+      "history": "",
+      "operations": "",
+      "lookAndFeel": "/rest/api/settings/lookandfeel?spaceKey=DW",
+      "permissions": "",
+      "theme": "/rest/api/space/DW/theme",
+      "homepage": "/rest/api/content/3473048177"
+    },
+    "_links": {
+      "webui": "/spaces/DW",
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/space/DW"
+    }
+  },
+  "history": {
+    "lastUpdated": {
+      "by": {
+        "type": "known",
+        "accountId": "61e7017854627a0070631dea",
+        "accountType": "atlassian",
+        "email": "rodneye@simpli.fi",
+        "publicName": "Rodney Estrada",
+        "profilePicture": {
+          "path": "/wiki/aa-avatar/61e7017854627a0070631dea",
+          "width": 48,
+          "height": 48,
+          "isDefault": false
+        },
+        "displayName": "Rodney Estrada",
+        "isExternalCollaborator": false,
+        "isGuest": false,
+        "locale": "en_US",
+        "accountStatus": "active",
+        "_expandable": {
+          "operations": "",
+          "personalSpace": ""
+        },
+        "_links": {
+          "self": "https://simplifi.atlassian.net/wiki/rest/api/user?accountId=61e7017854627a0070631dea"
+        }
+      },
+      "when": "2024-01-10T22:50:24.764Z",
+      "friendlyWhen": "Jan 10, 2024",
+      "message": "",
+      "number": 2,
+      "minorEdit": false,
+      "ncsStepVersion": "103",
+      "ncsStepVersionSource": "ncs-ack",
+      "confRev": "confluence$content$4027383817.19",
+      "contentTypeModified": false,
+      "_expandable": {
+        "collaborators": "",
+        "content": "/rest/api/content/4027383817"
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/version/2"
+      }
+    },
+    "latest": true,
+    "createdBy": {
+      "type": "known",
+      "accountId": "61e7017854627a0070631dea",
+      "accountType": "atlassian",
+      "email": "rodneye@simpli.fi",
+      "publicName": "Rodney Estrada",
+      "profilePicture": {
+        "path": "/wiki/aa-avatar/61e7017854627a0070631dea",
+        "width": 48,
+        "height": 48,
+        "isDefault": false
+      },
+      "displayName": "Rodney Estrada",
+      "isExternalCollaborator": false,
+      "isGuest": false,
+      "locale": "en_US",
+      "accountStatus": "active",
+      "_expandable": {
+        "operations": "",
+        "personalSpace": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/user?accountId=61e7017854627a0070631dea"
+      }
+    },
+    "createdDate": "2024-01-10T22:45:46.061Z",
+    "_expandable": {
+      "previousVersion": "",
+      "lastOwnedBy": "",
+      "contributors": "",
+      "nextVersion": "",
+      "ownedBy": ""
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/history"
+    }
+  },
+  "version": {
+    "by": {
+      "type": "known",
+      "accountId": "61e7017854627a0070631dea",
+      "accountType": "atlassian",
+      "email": "rodneye@simpli.fi",
+      "publicName": "Rodney Estrada",
+      "profilePicture": {
+        "path": "/wiki/aa-avatar/61e7017854627a0070631dea",
+        "width": 48,
+        "height": 48,
+        "isDefault": false
+      },
+      "displayName": "Rodney Estrada",
+      "isExternalCollaborator": false,
+      "isGuest": false,
+      "locale": "en_US",
+      "accountStatus": "active",
+      "_expandable": {
+        "operations": "",
+        "personalSpace": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/user?accountId=61e7017854627a0070631dea"
+      }
+    },
+    "when": "2024-01-10T22:50:24.764Z",
+    "friendlyWhen": "Jan 10, 2024",
+    "message": "",
+    "number": 2,
+    "minorEdit": false,
+    "ncsStepVersion": "103",
+    "ncsStepVersionSource": "ncs-ack",
+    "confRev": "confluence$content$4027383817.19",
+    "contentTypeModified": false,
+    "_expandable": {
+      "collaborators": "",
+      "content": "/rest/api/content/4027383817"
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/version/2"
+    }
+  },
+  "ancestors": [
+    {
+      "id": "3473048177",
+      "type": "page",
+      "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3473048177",
+      "status": "current",
+      "title": "Digital Workplace Solutions",
+      "macroRenderedOutput": {},
+      "extensions": {
+        "position": 372
+      },
+      "_expandable": {
+        "container": "/rest/api/space/DW",
+        "metadata": "",
+        "restrictions": "/rest/api/content/3473048177/restriction/byOperation",
+        "history": "/rest/api/content/3473048177/history",
+        "body": "",
+        "version": "",
+        "descendants": "/rest/api/content/3473048177/descendant",
+        "space": "/rest/api/space/DW",
+        "childTypes": "",
+        "schedulePublishInfo": "",
+        "operations": "",
+        "schedulePublishDate": "",
+        "children": "/rest/api/content/3473048177/child",
+        "ancestors": "",
+        "draftVersion": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3473048177",
+        "tinyui": "/x/cYICzw",
+        "editui": "/pages/resumedraft.action?draftId=3473048177",
+        "webui": "/spaces/DW/overview",
+        "edituiv2": "/spaces/DW/pages/edit-v2/3473048177"
+      }
+    },
+    {
+      "id": "3492511763",
+      "type": "page",
+      "ari": "ari:cloud:confluence:1ddedfba-913e-4ed3-97db-fa299ced0673:page/3492511763",
+      "status": "current",
+      "title": "Simplifi Employee Technical Guides",
+      "macroRenderedOutput": {},
+      "extensions": {
+        "position": 2810325
+      },
+      "_expandable": {
+        "container": "/rest/api/space/DW",
+        "metadata": "",
+        "restrictions": "/rest/api/content/3492511763/restriction/byOperation",
+        "history": "/rest/api/content/3492511763/history",
+        "body": "",
+        "version": "",
+        "descendants": "/rest/api/content/3492511763/descendant",
+        "space": "/rest/api/space/DW",
+        "childTypes": "",
+        "schedulePublishInfo": "",
+        "operations": "",
+        "schedulePublishDate": "",
+        "children": "/rest/api/content/3492511763/child",
+        "ancestors": "",
+        "draftVersion": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/3492511763",
+        "tinyui": "/x/E4Ar0",
+        "editui": "/pages/resumedraft.action?draftId=3492511763",
+        "webui": "/spaces/DW/pages/3492511763/Simplifi+Employee+Technical+Guides",
+        "edituiv2": "/spaces/DW/pages/edit-v2/3492511763"
+      }
+    }
+  ],
+  "macroRenderedOutput": {},
+  "body": {
+    "storage": {
+      "value": "<p><ac:emoticon ac:name=\"blue-star\" ac:emoji-shortname=\":construction:\" ac:emoji-id=\"1f6a7\" ac:emoji-fallback=\"\ud83d\udea7\" />  </p><a href=\"https://www.onetrust.com/\" data-card-appearance=\"block\">https://www.onetrust.com/</a><p>Limited availability.</p><p>Currently managed by Bill and Alexander.</p>",
+      "representation": "storage",
+      "embeddedContent": [],
+      "_expandable": {
+        "content": "/rest/api/content/4027383817"
+      }
+    },
+    "view": {
+      "value": "<p>\ud83d\udea7  </p><a class=\"external-link\" data-card-appearance=\"block\" href=\"https://www.onetrust.com/\" rel=\"nofollow\">https://www.onetrust.com/</a><p>Limited availability.</p><p>Currently managed by Bill and Alexander.</p>",
+      "representation": "view",
+      "_expandable": {
+        "webresource": "",
+        "embeddedContent": "",
+        "mediaToken": "",
+        "content": "/rest/api/content/4027383817"
+      }
+    },
+    "export_view": {
+      "value": "<p><img class=\"emoticon emoticon-blue-star\" data-emoji-id=\"1f6a7\" data-emoji-shortname=\":construction:\" data-emoji-fallback=\"\ud83d\udea7\" src=\"https://simplifi.atlassian.net/wiki/s/-23405043/6452/d7aa239c73e5b7ee3780b078ce3b9c381b80a960/_/images/icons/emoticons/72/1f6a7.png\" width=\"16\" height=\"16\" data-emoticon-name=\"blue-star\" alt=\"(blue star)\" />  </p><a class=\"external-link\" data-card-appearance=\"block\" href=\"https://www.onetrust.com/\" rel=\"nofollow\">https://www.onetrust.com/</a><p>Limited availability.</p><p>Currently managed by Bill and Alexander.</p>",
+      "representation": "export_view",
+      "_expandable": {
+        "webresource": "",
+        "embeddedContent": "",
+        "mediaToken": "",
+        "content": "/rest/api/content/4027383817"
+      }
+    },
+    "_expandable": {
+      "editor": "",
+      "atlas_doc_format": "",
+      "styled_view": "",
+      "dynamic": "",
+      "editor2": "",
+      "anonymous_export_view": ""
+    }
+  },
+  "metadata": {
+    "labels": {
+      "results": [
+        {
+          "prefix": "global",
+          "name": "onetrust",
+          "id": "4027285521",
+          "label": "onetrust"
+        },
+        {
+          "prefix": "global",
+          "name": "virtual_agent",
+          "id": "4237066321",
+          "label": "virtual_agent"
+        }
+      ],
+      "start": 0,
+      "limit": 200,
+      "size": 2,
+      "_links": {
+        "next": "/rest/api/content/4027383817/label?next=true&limit=200&start=200",
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/label"
+      }
+    },
+    "properties": {
+      "_expandable": {
+        "editor": "",
+        "emoji_title_published": "",
+        "emoji_title_draft": ""
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/property"
+      }
+    },
+    "_expandable": {
+      "lastEditedTime": "",
+      "currentuser": "",
+      "comments": "",
+      "createdBySpaceBlueprint": "",
+      "isActiveLiveEditSession": "",
+      "sourceTemplateEntityId": "",
+      "simple": "",
+      "frontend": "",
+      "likes": ""
+    }
+  },
+  "extensions": {
+    "position": 555871298
+  },
+  "restrictions": {
+    "read": {
+      "operation": "read",
+      "_expandable": {
+        "restrictions": "",
+        "content": "/rest/api/content/4027383817"
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/restriction/byOperation/read"
+      }
+    },
+    "update": {
+      "operation": "update",
+      "_expandable": {
+        "restrictions": "",
+        "content": "/rest/api/content/4027383817"
+      },
+      "_links": {
+        "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/restriction/byOperation/update"
+      }
+    },
+    "_links": {
+      "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817/restriction/byOperation"
+    }
+  },
+  "_expandable": {
+    "childTypes": "",
+    "container": "/rest/api/space/DW",
+    "schedulePublishInfo": "",
+    "operations": "",
+    "schedulePublishDate": "",
+    "children": "/rest/api/content/4027383817/child",
+    "draftVersion": "",
+    "descendants": "/rest/api/content/4027383817/descendant"
+  },
+  "_links": {
+    "editui": "/pages/resumedraft.action?draftId=4027383817",
+    "webui": "/spaces/DW/pages/4027383817/onetrust+Privacy+Platform",
+    "edituiv2": "/spaces/DW/pages/edit-v2/4027383817",
+    "context": "/wiki",
+    "self": "https://simplifi.atlassian.net/wiki/rest/api/content/4027383817",
+    "tinyui": "/x/CQAN8",
+    "collection": "/rest/api/content",
+    "base": "https://simplifi.atlassian.net/wiki"
+  }
+}
